@@ -80,7 +80,7 @@ namespace UCI_Test
                         cap2 = -7;
                     }
                    
-                    if (i % 8 != 0 && (board.board[i + cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove || (i + cap1 == board.EnPassentIndex && board.EnPassentIndex != 0))) //capture
+                    if (i % 8 != 0 && (board.board[i + cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove || i + cap1 == board.EnPassentIndex)) //capture
                     {
                         lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : '\0';
                         moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap1), true, lastCap));
@@ -120,14 +120,11 @@ namespace UCI_Test
 
                         pos2 = Board.IndexToPos(j);
 
-                        if (board.board[j] == null)
-                        {
-                        }
-                        else if (board.board[j].IsWhite == board.IsWhiteToMove)
+                        if (board.board[j] != null && board.board[j].IsWhite == board.IsWhiteToMove)
                         {
                             break;
                         }
-                        else
+                        else if (board.board[j] != null)
                         {
                             lastCap = board.board[j].Notation;
                             moves.Add(moveHelper(pos1, pos2, true, lastCap));
@@ -199,7 +196,7 @@ namespace UCI_Test
                            }
                         }
 
-                        if (i % 8 != 0 && (board.board[i + cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove || (i + cap1 == board.EnPassentIndex && board.EnPassentIndex != 0))) //capture
+                        if (i % 8 != 0 && (board.board[i + cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove)) //capture
                         {
                             lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : '\0';
                             move = moveHelper(pos1, Board.IndexToPos(i + cap1), true, lastCap);
@@ -211,7 +208,7 @@ namespace UCI_Test
 
                         }
 
-                        if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove || (i + cap2 == board.EnPassentIndex && board.EnPassentIndex != 0)))
+                        if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove))
                         {
                             lastCap = board.board[i + cap2] != null ? board.board[i + cap2].Notation : '\0';
                             move = moveHelper(pos1, Board.IndexToPos(i + cap2), true, lastCap);
@@ -236,13 +233,13 @@ namespace UCI_Test
                         }
                     }
 
-                    if (i % 8 != 0 && (board.board[i+cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove || (i + cap1 == board.EnPassentIndex && board.EnPassentIndex != 0))) //capture
+                    if (i % 8 != 0 && (board.board[i+cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove || i + cap1 == board.EnPassentIndex)) //capture
                     {
                         lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : '\0';
                         moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap1), true, lastCap));
                     }
 
-                    if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove || (i + cap2 == board.EnPassentIndex && board.EnPassentIndex != 0)))
+                    if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove || i + cap2 == board.EnPassentIndex))
                     {
                         lastCap = board.board[i + cap2] != null ? board.board[i + cap2].Notation : '\0';
                         moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap2), true, lastCap));
@@ -263,16 +260,9 @@ namespace UCI_Test
                             break;
                         }
 
-                        if (board.board[i].Notation is 'n' or 'N')
+                        if (board.board[i].Notation is 'n' or 'N' && i % 8 < 2 && (moveDelta == -10 || moveDelta == 6) || i % 8 > 5 && (moveDelta == 10 || moveDelta == -6))
                         {
-                            if (i % 8 < 2 && (moveDelta == -10 || moveDelta == 6))
-                            {
-                                break;
-                            }
-                            else if (i % 8 > 5 && (moveDelta == 10 || moveDelta == -6))
-                            {
-                                break;
-                            }
+                            break;
                         }
 
                         pos2 = Board.IndexToPos(j);

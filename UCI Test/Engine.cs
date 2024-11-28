@@ -32,12 +32,12 @@ namespace UCI_Test
             Move[] moves = Board.GetLegalMoves(board);
             Random rnd = new Random();
             int rand = rnd.Next(moves.Length - 1);
-            Move bestmove = moves[rand];
+            Move bestmove = moves[0];
 
             if (bestmove.PromPiece != '\0')
             {
-                Console.WriteLine("info isProm " + char.ToLower(bestmove.PromPiece));
-                return bestmove.Notation + bestmove.PromPiece;
+                //Console.WriteLine("info isProm " + char.ToLower(bestmove.PromPiece));
+                return bestmove.Notation + char.ToLower(bestmove.PromPiece);
             }
 
             return bestmove.Notation;
