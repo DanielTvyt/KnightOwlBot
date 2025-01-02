@@ -29,10 +29,9 @@ namespace UCI_Test
         }
         public static string Run(Board board)
         {
-            Move[] moves = Board.GetLegalMoves(board);
-            Random rnd = new Random();
-            int rand = rnd.Next(moves.Length - 1);
-            Move bestmove = moves[0];
+            Move bestmove;
+
+            bestmove = Engine.Search(board);
 
             if (bestmove.PromPiece != '\0')
             {
@@ -41,6 +40,34 @@ namespace UCI_Test
             }
 
             return bestmove.Notation;
+        }
+        private static Move Search(Board board)
+        {
+            Move[] moves = Board.GetLegalMoves(board);
+            Random rnd = new Random();
+            int rand = rnd.Next(moves.Length - 1);
+            Move bestmove = moves[rand];
+
+            foreach (Move move in moves)
+            {
+                board = Board.DoMove(move, board);
+                if (Board.GetLegalMoves(board).Length == 0)
+                {
+                    bestmove = move;
+                    Console.WriteLine("info M1");
+                    break;
+                }
+                board = Board.UndoMove(move, board);
+            }
+            return bestmove;
+        }
+        private static int Eval(Board board)
+        {
+            if (Board.GetLegalMoves(board).Length == 0)
+            {
+                return 1000;
+            }
+            return 0;
         }
     }
 }

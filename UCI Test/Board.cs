@@ -360,6 +360,15 @@ namespace UCI_Test
             return board;
         }
 
+        //public static bool IsMate(Board board)
+        //{
+        //    if (GetLegalMoves(board).Length != 0)
+        //    {
+        //        return false;
+        //    }
+        //    return true;
+        //}
+
         private static Move moveHelper(string pos1, string pos2, bool isCapture, char lastCapture)
         {
             Move move = new()
@@ -409,7 +418,7 @@ namespace UCI_Test
             return true;
         }
 
-        public static string IndexToPos(int index)
+        private static string IndexToPos(int index)
         {
             return "" + (char)(index % 8 + 97) + Convert.ToString(8 - index / 8); //char 97 = a
         }
