@@ -47,27 +47,76 @@ namespace UCI_Test
             Random rnd = new Random();
             int rand = rnd.Next(moves.Length - 1);
             Move bestmove = moves[rand];
+            int score;
+            int maxScore = int.MinValue;
+            int minScore = int.MaxValue;
 
             foreach (Move move in moves)
             {
                 board = Board.DoMove(move, board);
-                if (Board.GetLegalMoves(board).Length == 0)
+                if (Board.GetLegalMoves(board).Length == 0) //Mate in one
                 {
                     bestmove = move;
                     Console.WriteLine("info M1");
                     break;
                 }
+
+                score = Eval(board);
+
                 board = Board.UndoMove(move, board);
+
+                if (board.IsWhiteToMove)
+                {
+                    if (score > maxScore)
+                    {
+                        bestmove = move;
+                        maxScore = score;
+                    }
+                }
+                else
+                {
+                    if (score < minScore)
+                    {
+                        bestmove = move;
+                        minScore = score;
+                    }
+                }
+                
+            }
+            if (board.IsWhiteToMove)
+            {
+                Console.WriteLine("info depth 1 score " + maxScore);
+                Console.WriteLine("debug Is White");
+            }
+            else
+            {
+                Console.WriteLine("info depth 1 score " + minScore);
+                Console.WriteLine("debug is Black");
             }
             return bestmove;
         }
         private static int Eval(Board board)
         {
+            int Material = 0;
             if (Board.GetLegalMoves(board).Length == 0)
             {
-                return 1000;
+                if (board.IsWhiteToMove)
+                {
+                    return 1000;
+                }
+                return -1000;
             }
-            return 0;
+
+            foreach (Piece piece in board.board)
+            {
+                if (piece == null)
+                {
+                    continue;
+                }
+                Material += piece.Material;
+            }
+
+            return Material;
         }
     }
 }

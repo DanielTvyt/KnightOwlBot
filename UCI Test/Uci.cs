@@ -29,7 +29,6 @@ namespace UCI_Test
                     //Board.PrintBoard(board);
                     //Console.WriteLine(board.IsWhiteToMove);
                     bestmove = Engine.Run(board);
-                    Console.WriteLine("info depth 5 score 1");
                     Console.WriteLine("bestmove " + bestmove);
                 }
                 else if (UciIn == "uci")
