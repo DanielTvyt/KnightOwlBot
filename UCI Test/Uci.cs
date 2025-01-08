@@ -13,6 +13,8 @@ namespace UCI_Test
         { 
             string bestmove;
             string position = "";
+            uint time = 0;
+            string sTime = "";
             
             Board board = new Board();
             while (true)
@@ -26,9 +28,40 @@ namespace UCI_Test
                 else if (UciIn.Contains("go"))
                 {
                     board = Uci.GetPos(position);
-                    //Board.PrintBoard(board);
-                    //Console.WriteLine(board.IsWhiteToMove);
-                    bestmove = Engine.Run(board);
+                    if (board.IsWhiteToMove)
+                    {
+                        if (UciIn.Contains("wtime"))
+                        {
+                            int x = UciIn.IndexOf("wtime");
+                            for (int i = x + 6; i < UciIn.Length; i++)
+                            {
+                                if (UciIn[i] == ' ')
+                                {
+                                    break;
+                                }
+                                sTime += UciIn[i];
+                            }
+                            time = Convert.ToUInt32(sTime);
+                        }
+                    }
+                    else
+                    {
+                        if (UciIn.Contains("btime"))
+                        {
+                            int x = UciIn.IndexOf("btime");
+                            for (int i = x + 6; i < UciIn.Length; i++)
+                            {
+                                if (UciIn[i] == ' ')
+                                {
+                                    break;
+                                }
+                                sTime += UciIn[i];
+                            }
+                            time = Convert.ToUInt32(sTime);
+                        }
+                    }
+
+                    bestmove = Engine.Run(board, time);
                     Console.WriteLine("bestmove " + bestmove);
                 }
                 else if (UciIn == "uci")
@@ -39,6 +72,11 @@ namespace UCI_Test
                 else if (UciIn.Contains("isready"))
                 {
                     Console.WriteLine("readyok");
+                }
+                else if (UciIn == "print")
+                {
+                    board = Uci.GetPos(position);
+                    Board.PrintBoard(board);
                 }
             }
         }

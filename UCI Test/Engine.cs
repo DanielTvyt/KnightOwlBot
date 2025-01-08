@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace UCI_Test
 {
@@ -27,11 +28,17 @@ namespace UCI_Test
             }
             return leaves;
         }
-        public static string Run(Board board)
+        public static string Run(Board board, uint time)
         {
-            Move bestmove;
-
-            bestmove = Engine.Search(board);
+            int depth = 2;
+            if (time != 0)
+            {
+                System.Timers.Timer timer = new System.Timers.Timer(time);
+                timer.Elapsed += Timer_Elapsed;
+                timer.Start();
+            }
+            
+            Move bestmove = Engine.Search(board, depth);
 
             if (bestmove.PromPiece != '\0')
             {
@@ -41,7 +48,13 @@ namespace UCI_Test
 
             return bestmove.Notation;
         }
-        private static Move Search(Board board)
+
+        private static void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+
+        }
+
+        private static Move Search(Board board, int depth)
         {
             Move[] moves = Board.GetLegalMoves(board);
             Random rnd = new Random();
@@ -51,47 +64,48 @@ namespace UCI_Test
             int maxScore = int.MinValue;
             int minScore = int.MaxValue;
 
-            foreach (Move move in moves)
+            for (int d = 1; d <= depth; d++)
             {
-                board = Board.DoMove(move, board);
-                if (Board.GetLegalMoves(board).Length == 0) //Mate in one
+                foreach (Move move in moves)
                 {
-                    bestmove = move;
-                    Console.WriteLine("info M1");
-                    break;
-                }
-
-                score = Eval(board);
-
-                board = Board.UndoMove(move, board);
-
-                if (board.IsWhiteToMove)
-                {
-                    if (score > maxScore)
+                    board = Board.DoMove(move, board);
+                    if (Board.GetLegalMoves(board).Length == 0) //Mate in one
                     {
                         bestmove = move;
-                        maxScore = score;
+                        Console.WriteLine("info M1");
+                        break;
                     }
+
+                    score = Eval(board);
+
+                    board = Board.UndoMove(move, board);
+
+                    if (board.IsWhiteToMove)
+                    {
+                        if (score > maxScore)
+                        {
+                            bestmove = move;
+                            maxScore = score;
+                        }
+                    }
+                    else
+                    {
+                        if (score < minScore)
+                        {
+                            bestmove = move;
+                            minScore = score;
+                        }
+                    }
+
+                }
+                if (board.IsWhiteToMove)
+                {
+                    Console.WriteLine("info depth " + d + " score " + maxScore);
                 }
                 else
                 {
-                    if (score < minScore)
-                    {
-                        bestmove = move;
-                        minScore = score;
-                    }
+                    Console.WriteLine("info depth " + d + " score " + minScore);
                 }
-                
-            }
-            if (board.IsWhiteToMove)
-            {
-                Console.WriteLine("info depth 1 score " + maxScore);
-                Console.WriteLine("debug Is White");
-            }
-            else
-            {
-                Console.WriteLine("info depth 1 score " + minScore);
-                Console.WriteLine("debug is Black");
             }
             return bestmove;
         }
