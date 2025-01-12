@@ -342,7 +342,7 @@ namespace UCI_Test
 
             if (move.PromPiece != '\0')
             {
-                char pawn = board.IsWhiteToMove ? 'P' : 'p';
+                char pawn = board.IsWhiteToMove ? 'p' : 'P';
                 board.board[newMove.Notation[0] - 96 + 64 - 8 * Convert.ToInt32(new string(newMove.Notation[1], 1)) - 1] = Piece.CreatePiece(pawn);
             }
 

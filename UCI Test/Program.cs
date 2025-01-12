@@ -20,29 +20,26 @@ namespace UCI_Test
 
             //startpos rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
             Board board1 = new Board();
-            board1 = Board.BuildFromFenString("8/2p5/3p4/KP5r/1R2Pp1k/8/6P1/8 b - e3 0 1");
+            board1 = Board.BuildFromFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-            //Move mov = new Move();
-            //mov.Notation = "b4f4";
-            //board1 = Board.DoMove(mov, board1);
-            //Board.PrintBoard(board1);
-            //Move[] tests = Board.GetLegalMoves(board1);
-            //foreach (Move test in tests)
-            //{
-            //    board1 = Board.DoMove(test, board1);
-            //
-            //    Console.WriteLine(test.Notation);
-            //    Board.PrintBoard(board1);
-            //
-            //    board1 = Board.UndoMove(test, board1);
-            //}
-            //board1 = Board.UndoMove(mov, board1);
-            //Console.ReadLine();
+            Board.PrintBoard(board1);
+            Move[] tests = Board.GetLegalMoves(board1);
+            foreach (Move test in tests)
+            {
+                board1 = Board.DoMove(test, board1);
+            
+                Console.WriteLine(test.Notation);
+                Board.PrintBoard(board1);
+            
+                board1 = Board.UndoMove(test, board1);
+            }
+
+            Console.ReadLine();
             for (int i = 1; i <= 7; i++)
             {
                 var timer1 = System.Diagnostics.Stopwatch.StartNew();
                 ulong nodes = 0;
-                ulong curNodes = 0;
+                ulong curNodes;
                 timer1.Start();
                 Move[] moves = Board.GetLegalMoves(board1);
                 Console.WriteLine(moves.Length);
@@ -53,7 +50,6 @@ namespace UCI_Test
                     curNodes = Engine.Perft(board1, i - 1);
                     Console.WriteLine(curNodes);
                     nodes += curNodes;
-                    curNodes = 0;
                     board1 = Board.UndoMove(moves[j], board1);
                 }
                 
