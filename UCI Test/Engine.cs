@@ -24,7 +24,6 @@ namespace UCI_Test
             foreach (Move move in legalMoves)
             {
                 board = Board.DoMove(move, board);
-                //Console.WriteLine(board.EnPassentIndex);
                 leaves += Perft(board, depth);
                 board = Board.UndoMove(move, board);
             }
@@ -46,12 +45,14 @@ namespace UCI_Test
                 int score;
                 int maxScore = int.MinValue;
                 int minScore = int.MaxValue;
+                int alpha = int.MinValue;
+                int beta = int.MaxValue;
 
                 foreach (Move move in Board.GetLegalMoves(board))
                 {
                     board = Board.DoMove(move, board);
 
-                    score = Engine.Search(board, depth);
+                    score = Engine.Search(board, depth, alpha, beta);
 
                     board = Board.UndoMove(move, board);
 
@@ -62,6 +63,7 @@ namespace UCI_Test
                             bestmove = move;
                             maxScore = score;
                             Console.WriteLine("Max " + maxScore + " move " + bestmove.Notation);
+                            alpha = Math.Max(maxScore, alpha);
                         }
                     }
                     else
@@ -71,11 +73,12 @@ namespace UCI_Test
                             bestmove = move;
                             minScore = score;
                             Console.WriteLine("Min " + minScore + " move " + bestmove.Notation);
+                            beta = Math.Min(minScore, beta);
                         }
                     }
 
                 }
-                //Board.PrintBoard(board);
+
                 if (board.IsWhiteToMove)
                 {
                     Console.WriteLine("info depth " + depth + " time " + watch.ElapsedMilliseconds + " nodes " + nodes + " pv " + bestmove.Notation + " score cp " + (maxScore * 100) + " nps " + (1000 * nodes / (watch.ElapsedMilliseconds + 1)));
@@ -89,14 +92,13 @@ namespace UCI_Test
 
             if (bestmove.PromPiece != '\0')
             {
-                //Console.WriteLine("info isProm " + char.ToLower(bestmove.PromPiece));
                 return bestmove.Notation + char.ToLower(bestmove.PromPiece);
             }
 
             return bestmove.Notation;
         }
 
-        private static int Search(Board board, int depth)
+        private static int Search(Board board, int depth, int alpha, int beta)
         {
             depth--;
 
@@ -124,38 +126,48 @@ namespace UCI_Test
             foreach (Move move in moves)
             {
                 board = Board.DoMove(move, board);
-                score = Search(board, depth);
+                score = Search(board, depth, alpha, beta);
                 board = Board.UndoMove(move, board);
 
                 if (board.IsWhiteToMove)
                 {
+                    if (beta <= score)
+                    {
+                        return beta;
+                    }
                     if (score > maxScore)
                     {
                         bestmove = move;
                         maxScore = score;
+                        alpha = Math.Max(maxScore, alpha);
                     }
                 }
                 else
                 {
+                    if (alpha >= score)
+                    {
+                        return alpha;
+                    }
                     if (score < minScore)
                     {
                         bestmove = move;
                         minScore = score;
+                        beta = Math.Min(minScore, beta);
                     }
                 }
 
             }
             if (board.IsWhiteToMove)
             {
-                //Console.WriteLine("info depth " + depth + " score " + maxScore);
                 return maxScore;
             }
             else
             {
-                //Console.WriteLine("info depth " + depth + " score " + minScore);
                 return minScore;
             }
         }
+
+
         private static int Eval(Board board)
         {
             nodes++;
