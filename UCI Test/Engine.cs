@@ -37,7 +37,7 @@ namespace UCI_Test
             {
                 time = 500 * 100; //if no time is given search for 500ms
             }
-            uint maxTime = time / 100 + inc;
+            uint maxTime = time / 100;
             var watch = new Stopwatch();
             watch.Start();
             for (int depth = 1; watch.ElapsedMilliseconds < maxTime; depth++)
