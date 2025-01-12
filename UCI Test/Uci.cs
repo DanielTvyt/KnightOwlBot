@@ -17,6 +17,10 @@ namespace UCI_Test
             Board board = new Board();
             while (true)
             {
+                uint time = 0;
+                uint inc = 0;
+                string sTime = "";
+                string sInc = "";
                 string UciIn = Console.ReadLine();
                 //Task<Board> taskGetPos = new Task<Board>(() => { return Uci.GetPos(UciIn); });
                 if (UciIn.Contains("position"))
@@ -26,9 +30,66 @@ namespace UCI_Test
                 else if (UciIn.Contains("go"))
                 {
                     board = Uci.GetPos(position);
-                    //Board.PrintBoard(board);
-                    //Console.WriteLine(board.IsWhiteToMove);
-                    bestmove = Engine.Run(board);
+                    if (board.IsWhiteToMove)
+                    {
+                        if (UciIn.Contains("wtime"))
+                        {
+                            int x = UciIn.IndexOf("wtime");
+                            for (int i = x + 6; i < UciIn.Length; i++)
+                            {
+                                if (UciIn[i] == ' ')
+                                {
+                                    break;
+                                }
+                                sTime += UciIn[i];
+                            }
+                            time = Convert.ToUInt32(sTime);
+                        }
+                        if (UciIn.Contains("winc"))
+                        {
+                            int x = UciIn.IndexOf("winc");
+                            for (int i = x + 5; i < UciIn.Length; i++)
+                            {
+                                if (UciIn[i] == ' ')
+                                {
+                                    break;
+                                }
+                                sInc += UciIn[i];
+                            }
+                            inc = Convert.ToUInt32(sTime);
+                        }
+                    }
+                    else
+                    {
+                        if (UciIn.Contains("btime"))
+                        {
+                            int x = UciIn.IndexOf("btime");
+                            for (int i = x + 6; i < UciIn.Length; i++)
+                            {
+                                if (UciIn[i] == ' ')
+                                {
+                                    break;
+                                }
+                                sTime += UciIn[i];
+                            }
+                            time = Convert.ToUInt32(sTime);
+                        }
+                        if (UciIn.Contains("binc"))
+                        {
+                            int x = UciIn.IndexOf("binc");
+                            for (int i = x + 5; i < UciIn.Length; i++)
+                            {
+                                if (UciIn[i] == ' ')
+                                {
+                                    break;
+                                }
+                                sInc += UciIn[i];
+                            }
+                            inc = Convert.ToUInt32(sTime);
+                        }
+                    }
+
+                    bestmove = Engine.Run(board, time, inc);
                     Console.WriteLine("bestmove " + bestmove);
                 }
                 else if (UciIn == "uci")
@@ -39,6 +100,11 @@ namespace UCI_Test
                 else if (UciIn.Contains("isready"))
                 {
                     Console.WriteLine("readyok");
+                }
+                else if (UciIn == "print")
+                {
+                    board = Uci.GetPos(position);
+                    Board.PrintBoard(board);
                 }
             }
         }

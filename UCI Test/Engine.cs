@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace UCI_Test
 {
     internal class Engine
     {
-        public static int nodes = 0;
+        private static int nodes = 0;
         public static ulong Perft(Board board, int depth)
         {
             Move[] legalMoves = Board.GetLegalMoves(board);
@@ -27,11 +30,62 @@ namespace UCI_Test
             }
             return leaves;
         }
-        public static string Run(Board board)
+        public static string Run(Board board, uint time, uint inc)
         {
-            Move bestmove;
+            Move bestmove = null;
+            if (time == 0)
+            {
+                time = 500 * 100; //if no time is given search for 500ms
+            }
+            uint maxTime = time / 100;
+            var watch = new Stopwatch();
+            watch.Start();
+            for (int depth = 1; watch.ElapsedMilliseconds < maxTime; depth++)
+            {
+                nodes = 0;
+                int score;
+                int maxScore = int.MinValue;
+                int minScore = int.MaxValue;
 
-            bestmove = Engine.Search(board);
+                foreach (Move move in Board.GetLegalMoves(board))
+                {
+                    board = Board.DoMove(move, board);
+
+                    score = Engine.Search(board, depth);
+
+                    board = Board.UndoMove(move, board);
+
+                    if (board.IsWhiteToMove)
+                    {
+                        if (score > maxScore)
+                        {
+                            bestmove = move;
+                            maxScore = score;
+                            Console.WriteLine("Max " + maxScore + " move " + bestmove.Notation);
+                        }
+                    }
+                    else
+                    {
+                        if (score < minScore)
+                        {
+                            bestmove = move;
+                            minScore = score;
+                            Console.WriteLine("Min " + minScore + " move " + bestmove.Notation);
+                        }
+                    }
+
+                }
+                //Board.PrintBoard(board);
+                if (board.IsWhiteToMove)
+                {
+                    Console.WriteLine("info depth " + depth + " time " + watch.ElapsedMilliseconds + " nodes " + nodes + " pv " + bestmove.Notation + " score cp " + (maxScore * 100) + " nps " + (1000 * nodes / (watch.ElapsedMilliseconds + 1)));
+                }
+                else
+                {
+                    Console.WriteLine("info depth " + depth + " time " + watch.ElapsedMilliseconds + " nodes " + nodes + " pv " + bestmove.Notation + " score cp " + (minScore * -100) + " nps " + (1000 * nodes / (watch.ElapsedMilliseconds + 1)));
+                }
+            }
+        
 
             if (bestmove.PromPiece != '\0')
             {
@@ -41,12 +95,28 @@ namespace UCI_Test
 
             return bestmove.Notation;
         }
-        private static Move Search(Board board)
+
+        private static int Search(Board board, int depth)
         {
+            depth--;
+
+            if (depth <= 0)
+            {
+                return Eval(board);
+            }
+
             Move[] moves = Board.GetLegalMoves(board);
-            Random rnd = new Random();
-            int rand = rnd.Next(moves.Length - 1);
-            Move bestmove = moves[rand];
+
+            if (moves.Length == 0)
+            {
+                if (board.IsWhiteToMove)
+                {
+                    return -1000 * depth;
+                }
+                return 1000 * depth;
+            }
+
+            Move bestmove;
             int score;
             int maxScore = int.MinValue;
             int minScore = int.MaxValue;
@@ -54,15 +124,7 @@ namespace UCI_Test
             foreach (Move move in moves)
             {
                 board = Board.DoMove(move, board);
-                if (Board.GetLegalMoves(board).Length == 0) //Mate in one
-                {
-                    bestmove = move;
-                    Console.WriteLine("info M1");
-                    break;
-                }
-
-                score = Eval(board);
-
+                score = Search(board, depth);
                 board = Board.UndoMove(move, board);
 
                 if (board.IsWhiteToMove)
@@ -81,31 +143,23 @@ namespace UCI_Test
                         minScore = score;
                     }
                 }
-                
+
             }
             if (board.IsWhiteToMove)
             {
-                Console.WriteLine("info depth 1 score " + maxScore);
-                Console.WriteLine("debug Is White");
+                //Console.WriteLine("info depth " + depth + " score " + maxScore);
+                return maxScore;
             }
             else
             {
-                Console.WriteLine("info depth 1 score " + minScore);
-                Console.WriteLine("debug is Black");
+                //Console.WriteLine("info depth " + depth + " score " + minScore);
+                return minScore;
             }
-            return bestmove;
         }
         private static int Eval(Board board)
         {
+            nodes++;
             int Material = 0;
-            if (Board.GetLegalMoves(board).Length == 0)
-            {
-                if (board.IsWhiteToMove)
-                {
-                    return 1000;
-                }
-                return -1000;
-            }
 
             foreach (Piece piece in board.board)
             {
