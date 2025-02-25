@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Timers;
 
 namespace UCI_Test
 {
     internal class Engine
     {
         private static int nodes = 0;
+        private static Random rand = new();
         public static ulong Perft(Board board, int depth)
         {
             Move[] legalMoves = Board.GetLegalMoves(board);
@@ -32,16 +29,20 @@ namespace UCI_Test
         public static string Run(Board board, uint time, uint inc)
         {
             Move bestmove = null;
+            string pvString;
             if (time == 0)
             {
                 time = 500 * 100; //if no time is given search for 500ms
             }
-            uint maxTime = time / 100;
+            uint maxTime = (time+inc) / 100;
             var watch = new Stopwatch();
             watch.Start();
-            for (int depth = 1; watch.ElapsedMilliseconds < maxTime; depth++)
+            for (uint depth = 1; watch.ElapsedMilliseconds < maxTime; depth++)
             {
+                List<string> bestPv = [];
+                List<string> pv;      
                 nodes = 0;
+                int cp;
                 int score;
                 int maxScore = int.MinValue;
                 int minScore = int.MaxValue;
@@ -52,7 +53,7 @@ namespace UCI_Test
                 {
                     board = Board.DoMove(move, board);
 
-                    score = Engine.Search(board, depth, alpha, beta);
+                    (score, pv) = Engine.Search(board, depth, alpha, beta);
 
                     board = Board.UndoMove(move, board);
 
@@ -60,20 +61,24 @@ namespace UCI_Test
                     {
                         if (score > maxScore)
                         {
-                            bestmove = move;
                             maxScore = score;
-                            Console.WriteLine("Max " + maxScore + " move " + bestmove.Notation);
                             alpha = Math.Max(maxScore, alpha);
+                            pv.Add(move.Notation);
+                            bestPv = pv;
+                            bestmove = move;
+                            //Console.WriteLine("Max " + maxScore + " move " + bestmove.Notation);
                         }
                     }
                     else
                     {
                         if (score < minScore)
                         {
-                            bestmove = move;
                             minScore = score;
-                            Console.WriteLine("Min " + minScore + " move " + bestmove.Notation);
                             beta = Math.Min(minScore, beta);
+                            pv.Add(move.Notation);
+                            bestPv = pv;
+                            bestmove = move;
+                            //Console.WriteLine("Min " + minScore + " move " + bestmove.Notation);
                         }
                     }
 
@@ -81,12 +86,17 @@ namespace UCI_Test
 
                 if (board.IsWhiteToMove)
                 {
-                    Console.WriteLine("info depth " + depth + " time " + watch.ElapsedMilliseconds + " nodes " + nodes + " pv " + bestmove.Notation + " score cp " + (maxScore * 100) + " nps " + (1000 * nodes / (watch.ElapsedMilliseconds + 1)));
+                    cp = maxScore;
                 }
                 else
                 {
-                    Console.WriteLine("info depth " + depth + " time " + watch.ElapsedMilliseconds + " nodes " + nodes + " pv " + bestmove.Notation + " score cp " + (minScore * -100) + " nps " + (1000 * nodes / (watch.ElapsedMilliseconds + 1)));
+                    cp = minScore * -1;
                 }
+
+                bestPv.Reverse();
+                pvString = string.Join(" ", bestPv);
+
+                Console.WriteLine("info depth " + depth + " time " + watch.ElapsedMilliseconds + " nodes " + nodes + " pv " + pvString + " score cp " + cp + " nps " + (1000 * nodes / (watch.ElapsedMilliseconds + 1)));
             }
         
 
@@ -98,73 +108,69 @@ namespace UCI_Test
             return bestmove.Notation;
         }
 
-        private static int Search(Board board, int depth, int alpha, int beta)
+        private static (int, List<string>) Search(Board board, uint depth, int alpha, int beta)
         {
             depth--;
+            string bestMove = null;
+            List<string> pv = [];
+            List<string> bestPv = [];
 
             if (depth <= 0)
             {
-                return Eval(board);
+                return (Eval(board), pv);
             }
 
             Move[] moves = Board.GetLegalMoves(board);
 
             if (moves.Length == 0)
             {
-                if (board.IsWhiteToMove)
-                {
-                    return -1000 * depth;
-                }
-                return 1000 * depth;
+                return (board.IsWhiteToMove ? Convert.ToInt32(-10000 * depth) : Convert.ToInt32(10000 * depth), pv);
             }
 
-            Move bestmove;
             int score;
-            int maxScore = int.MinValue;
-            int minScore = int.MaxValue;
+            int bestScore = board.IsWhiteToMove ? int.MinValue : int.MaxValue;
 
             foreach (Move move in moves)
             {
                 board = Board.DoMove(move, board);
-                score = Search(board, depth, alpha, beta);
+
+                (score, pv) = Search(board, depth, alpha, beta);
+
                 board = Board.UndoMove(move, board);
 
                 if (board.IsWhiteToMove)
                 {
                     if (beta <= score)
                     {
-                        return beta;
+                        pv.Add(move.Notation);
+                        return (beta, pv);
                     }
-                    if (score > maxScore)
+                    if (score > bestScore)
                     {
-                        bestmove = move;
-                        maxScore = score;
-                        alpha = Math.Max(maxScore, alpha);
+                        bestMove = move.Notation;
+                        bestPv = pv;
+                        bestScore = score;
+                        alpha = Math.Max(bestScore, alpha);
                     }
                 }
                 else
                 {
                     if (alpha >= score)
                     {
-                        return alpha;
+                        pv.Add(move.Notation);
+                        return (alpha, pv);
                     }
-                    if (score < minScore)
+                    if (score < bestScore)
                     {
-                        bestmove = move;
-                        minScore = score;
-                        beta = Math.Min(minScore, beta);
+                        bestMove = move.Notation;
+                        bestPv = pv;
+                        bestScore = score;
+                        beta = Math.Min(bestScore, beta);
                     }
                 }
-
             }
-            if (board.IsWhiteToMove)
-            {
-                return maxScore;
-            }
-            else
-            {
-                return minScore;
-            }
+            bestPv.Add(bestMove);
+            return (bestScore, bestPv);
         }
 
 
@@ -181,7 +187,7 @@ namespace UCI_Test
                 }
                 Material += piece.Material;
             }
-
+            //Material += rand.Next(10);
             return Material;
         }
     }

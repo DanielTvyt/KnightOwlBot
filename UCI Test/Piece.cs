@@ -11,7 +11,7 @@ namespace UCI_Test
         public int[] MoveDelta;
         public bool IsWhite;
         public bool IsSliding;
-        public bool IsKing;
+        //public bool IsKing;
         public int Material;
         public char Notation;
 
@@ -27,7 +27,7 @@ namespace UCI_Test
                     Piece pawnW = new Piece
                     {
                         IsWhite = true,
-                        Material = 1,
+                        Material = 100,
                         IsSliding = false,
                         Notation = pieceIn,
                     };
@@ -36,7 +36,7 @@ namespace UCI_Test
                     Piece knightW = new Piece
                     {
                         IsWhite = true,
-                        Material = 3,
+                        Material = 300,
                         IsSliding = false,
                         MoveDelta = knight,
                         Notation = pieceIn,
@@ -46,7 +46,7 @@ namespace UCI_Test
                     Piece bishopW = new Piece
                     {
                         IsWhite = true,
-                        Material = 3,
+                        Material = 300,
                         IsSliding = true,
                         MoveDelta = bishop,
                         Notation = pieceIn,
@@ -56,7 +56,7 @@ namespace UCI_Test
                     Piece rookW = new Piece
                     {
                         IsWhite = true,
-                        Material = 5,
+                        Material = 500,
                         IsSliding = true,
                         MoveDelta = rook,
                         Notation = pieceIn,
@@ -66,7 +66,7 @@ namespace UCI_Test
                     Piece queenW = new Piece
                     {
                         IsWhite = true,
-                        Material = 9,
+                        Material = 900,
                         IsSliding = true,
                         MoveDelta = queen,
                         Notation = pieceIn,
@@ -86,7 +86,7 @@ namespace UCI_Test
                     Piece pawnB = new Piece
                     {
                         IsWhite = false,
-                        Material = -1,
+                        Material = -100,
                         IsSliding = false,
                         Notation = pieceIn,
                     };
@@ -95,7 +95,7 @@ namespace UCI_Test
                     Piece knightB = new Piece
                     {
                         IsWhite = false,
-                        Material = -3,
+                        Material = -300,
                         IsSliding = false,
                         MoveDelta = knight,
                         Notation = pieceIn,
@@ -105,7 +105,7 @@ namespace UCI_Test
                     Piece bishopB = new Piece
                     {
                         IsWhite = false,
-                        Material = -3,
+                        Material = -300,
                         IsSliding = true,
                         MoveDelta = bishop,
                         Notation = pieceIn,
@@ -115,7 +115,7 @@ namespace UCI_Test
                     Piece rookB = new Piece
                     {
                         IsWhite = false,
-                        Material = -5,
+                        Material = -500,
                         IsSliding = true,
                         MoveDelta = rook,
                         Notation = pieceIn,
@@ -125,7 +125,7 @@ namespace UCI_Test
                     Piece queenB = new Piece
                     {
                         IsWhite = false,
-                        Material = -9,
+                        Material = -900,
                         IsSliding = true,
                         MoveDelta = queen,
                         Notation = pieceIn,

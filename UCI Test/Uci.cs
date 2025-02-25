@@ -22,7 +22,7 @@ namespace UCI_Test
                 string sTime = "";
                 string sInc = "";
                 string UciIn = Console.ReadLine();
-                //Task<Board> taskGetPos = new Task<Board>(() => { return Uci.GetPos(UciIn); });
+
                 if (UciIn.Contains("position"))
                 {
                     position = UciIn;
@@ -88,7 +88,10 @@ namespace UCI_Test
                             inc = Convert.ToUInt32(sTime);
                         }
                     }
-
+                    if (UciIn.Contains("infinite"))
+                    {
+                        time = uint.MaxValue;
+                    }
                     bestmove = Engine.Run(board, time, inc);
                     Console.WriteLine("bestmove " + bestmove);
                 }
