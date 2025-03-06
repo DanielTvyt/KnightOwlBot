@@ -11,7 +11,6 @@ namespace UCI_Test
         public int[] MoveDelta;
         public bool IsWhite;
         public bool IsSliding;
-        //public bool IsKing;
         public int Material;
         public char Notation;
 
@@ -76,6 +75,7 @@ namespace UCI_Test
                     Piece kingW = new Piece
                     {
                         IsWhite = true,
+                        Material = 0,
                         IsSliding = false,
                         MoveDelta = queen,
                         Notation = pieceIn,
@@ -135,6 +135,7 @@ namespace UCI_Test
                     Piece kingB = new Piece
                     {
                         IsWhite = false,
+                        Material = 0,
                         IsSliding = false,
                         MoveDelta = queen,
                         Notation = pieceIn,

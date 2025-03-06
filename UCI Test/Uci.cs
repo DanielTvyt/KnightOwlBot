@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +15,7 @@ namespace UCI_Test
             string bestmove;
             string position = "";
             
-            Board board = new Board();
+            Board board = new();
             while (true)
             {
                 uint time = 0;
@@ -109,6 +110,10 @@ namespace UCI_Test
                     board = Uci.GetPos(position);
                     Board.PrintBoard(board);
                 }
+                else if (UciIn == "quit")
+                {
+                    Environment.Exit(0);
+                }
             }
         }
 
@@ -116,7 +121,6 @@ namespace UCI_Test
         public static Board GetPos(string uciIn)
         {
             string fenString;
-            Board board = Board.BuildFromFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
             if (uciIn.Contains("fen"))   //positon fen <fenstring>
             {
                 fenString = uciIn.Remove(0, 13);
@@ -124,6 +128,7 @@ namespace UCI_Test
             }
             else
             {
+                Board board = Board.BuildFromFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
                 if (uciIn == "position startpos")
                 {
                     return board;
@@ -134,8 +139,10 @@ namespace UCI_Test
 
                     for (int i = 3; i < moves.Length; i++) //skip pos, start, moves
                     {
-                        Move move = new Move();
-                        move.Notation = moves[i];
+                        Move move = new()
+                        {
+                            Notation = moves[i]
+                        };
                         if (move.Notation.Length == 5)
                         {
                             move.PromPiece = move.Notation[4];

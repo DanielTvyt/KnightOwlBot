@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace UCI_Test
 {
@@ -16,7 +13,7 @@ namespace UCI_Test
 
         public static Board BuildFromFenString(string fenString)
         {
-            Board boardOut = new Board
+            Board boardOut = new()
             {
                 board = new Piece[64]
             };
@@ -47,10 +44,23 @@ namespace UCI_Test
                 y++;
             }
             boardOut.IsWhiteToMove = fenString[y + 1] == 'w';
+
+            for (int i = y + 3; i < fenString.Length; i++) //search for first space after w/b (skip castling rights)
+            {
+                if (fenString[i] == ' ')
+                {
+                    if (fenString[i + 1] == '-')
+                    {
+                        break;
+                    }
+                    boardOut.EnPassentIndex = fenString[i + 1] - 96 + 64 - 8 * Convert.ToInt32(new string(fenString[i + 2], 1)) - 1;
+                    break;
+                }
+            }
             return boardOut;
         }
 
-        private static Move[] GetCaptures(Board board)
+        private static Move[] GetCaptures(Board board) //No Enpassant -> cant capture King
         {
             List<Move> moves = [];
             int moveDelta;
@@ -79,14 +89,14 @@ namespace UCI_Test
                         cap1 = -9;
                         cap2 = -7;
                     }
-                   
-                    if (i % 8 != 0 && (board.board[i + cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove || i + cap1 == board.EnPassentIndex)) //capture
+
+                    if (i % 8 != 0 && (board.board[i + cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove)) //capture
                     {
                         lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : '\0';
                         moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap1), true, lastCap));
                     }
 
-                    if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove || (i + cap2 == board.EnPassentIndex && board.EnPassentIndex != 0)))
+                    if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove))
                     {
                         lastCap = board.board[i + cap2] != null ? board.board[i + cap2].Notation : '\0';
                         moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap2), true, lastCap));
@@ -106,16 +116,9 @@ namespace UCI_Test
                             break;
                         }
 
-                        if (board.board[i].Notation is 'n' or 'N')
+                        if (board.board[i].Notation is 'n' or 'N' && i % 8 < 2 && (moveDelta == -10 || moveDelta == 6) || i % 8 > 5 && (moveDelta == 10 || moveDelta == -6))
                         {
-                            if (i % 8 < 2 && (moveDelta == -10 || moveDelta == 6))
-                            {
-                                break;
-                            }
-                            else if (i % 8 > 5 && (moveDelta == 10 || moveDelta == -6))
-                            {
-                                break;
-                            }
+                            break;
                         }
 
                         pos2 = Board.IndexToPos(j);
@@ -188,7 +191,7 @@ namespace UCI_Test
                     {
                         if (board.board[i + fw] == null)
                         {
-                           move = moveHelper(pos1, Board.IndexToPos(i + fw), false, ' ');
+                           move = moveHelper(pos1, Board.IndexToPos(i + fw), false, '\0');
                            for (int j = 0; j < 4; j++)
                            {
                                move.PromPiece = promPieces[j];
@@ -218,28 +221,27 @@ namespace UCI_Test
                                 moves.Add(move);
                             }
                         }
-                        move = new Move();
                         continue;
                     }
                     else if (board.board[i + fw] == null) //move one forward
                     {
-                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + fw), false, ' '));
+                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + fw), false, '\0'));
 
                         if (i / 8 == start && board.board[i + fw2] == null) 
                         {
-                            move = moveHelper(pos1, Board.IndexToPos(i + fw2), false, ' ');
+                            move = moveHelper(pos1, Board.IndexToPos(i + fw2), false, '\0');
                             move.EnPassentIndex = i + fw;
                             moves.Add(move);
                         }
                     }
 
-                    if (i % 8 != 0 && (board.board[i+cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove || i + cap1 == board.EnPassentIndex)) //capture
+                    if (i % 8 != 0 && (board.board[i+cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove || (i + cap1 == board.EnPassentIndex && i / 8 != start))) //capture
                     {
                         lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : '\0';
                         moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap1), true, lastCap));
                     }
 
-                    if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove || i + cap2 == board.EnPassentIndex))
+                    if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove || (i + cap2 == board.EnPassentIndex && i / 8 != start)))
                     {
                         lastCap = board.board[i + cap2] != null ? board.board[i + cap2].Notation : '\0';
                         moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap2), true, lastCap));
@@ -269,7 +271,7 @@ namespace UCI_Test
 
                         if (board.board[j] == null)
                         {
-                            moves.Add(moveHelper(pos1, pos2, false, ' '));
+                            moves.Add(moveHelper(pos1, pos2, false, '\0'));
                         }
                         else if (board.board[j].IsWhite == board.IsWhiteToMove)
                         {
@@ -305,10 +307,6 @@ namespace UCI_Test
                 {
                     legalMoves.Add(m);
                 }
-                else
-                {
-                    continue;
-                }
             }
             return [.. legalMoves];
         }
@@ -321,7 +319,46 @@ namespace UCI_Test
             board.board[index2] = board.board[index1];
             board.board[index1] = null;
 
-            board.IsWhiteToMove = !board.IsWhiteToMove;
+            if (board.board[index2].Material == 0)
+            {
+                if (index1 == 60 || index1 == 4)
+                {
+                    int rookMove = 0;
+                    char rook;
+                    if (board.IsWhiteToMove)
+                    {
+                        rook = 'R';
+                        if (index2 == 62)
+                        {
+                            board.board[63] = null;
+                            rookMove = 61;
+                        }
+                        else if (index2 == 58)
+                        {
+                            board.board[56] = null;
+                            rookMove = 59;
+                        }
+                    }
+                    else
+                    {
+                        rook = 'r';
+                        if(index2 == 6)
+                        {
+                            board.board[7] = null;
+                            rookMove = 5;
+                        }
+                        else if (index2 == 2)
+                        {
+                            board.board[0] = null;
+                            rookMove = 3;
+                        }
+                    }
+                    if (rookMove != 0)
+                    {
+                        board.board[rookMove] = Piece.CreatePiece(rook);
+                    }
+                }
+            }
 
             if (move.PromPiece != '\0')
             {
@@ -330,12 +367,26 @@ namespace UCI_Test
 
             board.EnPassentIndex = move.EnPassentIndex;
 
+            if (move.IsCapture && move.LastCapture == '\0')
+            {
+                if(board.IsWhiteToMove)
+                {
+                    board.board[index2 + 8] = null;
+                }
+                else
+                {
+                    board.board[index2 - 8] = null;
+                }
+            }
+
+            board.IsWhiteToMove = !board.IsWhiteToMove;
+
             return board;
         }
 
         public static Board UndoMove(Move move, Board board)
         {
-            Move newMove = new Move
+            Move newMove = new()
             {
                 Notation = Convert.ToString("" + move.Notation[2] + move.Notation[3] + move.Notation[0] + move.Notation[1])  //e2e4
             };
@@ -345,29 +396,38 @@ namespace UCI_Test
                 char pawn = board.IsWhiteToMove ? 'p' : 'P';
                 board.board[newMove.Notation[0] - 96 + 64 - 8 * Convert.ToInt32(new string(newMove.Notation[1], 1)) - 1] = Piece.CreatePiece(pawn);
             }
+            //Do Move
+            int index1 = newMove.Notation[0] - 96 + 64 - 8 * Convert.ToInt32(new string(newMove.Notation[1], 1)) - 1;
+            int index2 = newMove.Notation[2] - 96 + 64 - 8 * Convert.ToInt32(new string(newMove.Notation[3], 1)) - 1;
 
-            board = Board.DoMove(newMove, board);
+            board.board[index2] = board.board[index1];
+            board.board[index1] = null;
+
+            board.IsWhiteToMove = !board.IsWhiteToMove;
+            //Do Move
 
             if (move.IsCapture)
             {
-                int[] pos1 = new int[2];
-                pos1[0] = newMove.Notation[0] - 96;   //index of lower case letter in alphabet (a = 1, b = 2, ...)
-                pos1[1] = 64 - 8 * Convert.ToInt32(new string(newMove.Notation[1], 1)) - 1;
-                board.board[pos1[0] + pos1[1]] = Piece.CreatePiece(move.LastCapture);
+                if (move.LastCapture == '\0') //En Passent
+                {
+                    int offset = board.IsWhiteToMove ? 8 : -8;
+                    char pawn = board.IsWhiteToMove ? 'p' : 'P';
+                    int pos1 = index1 + offset;
+                    board.board[pos1] = Piece.CreatePiece(pawn);
+                }
+                else
+                {
+                    int[] pos1 =
+                    [
+                        newMove.Notation[0] - 96,   //index of lower case letter in alphabet (a = 1, b = 2, ...)
+                        64 - 8 * Convert.ToInt32(new string(newMove.Notation[1], 1)) - 1,
+                    ];
+                    board.board[pos1[0] + pos1[1]] = Piece.CreatePiece(move.LastCapture);
+                }
             }
-
             board.EnPassentIndex = move.EnPassentIndex;
             return board;
         }
-
-        //public static bool IsMate(Board board)
-        //{
-        //    if (GetLegalMoves(board).Length != 0)
-        //    {
-        //        return false;
-        //    }
-        //    return true;
-        //}
 
         private static Move moveHelper(string pos1, string pos2, bool isCapture, char lastCapture)
         {
@@ -442,7 +502,7 @@ namespace UCI_Test
                 }
                 
             }
-            Console.WriteLine(" ");
+            Console.WriteLine(" \n");
         }
 
     }
