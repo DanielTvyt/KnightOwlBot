@@ -191,9 +191,9 @@ namespace UCI_Test
                     {
                         if (board.board[i + fw] == null)
                         {
-                           move = moveHelper(pos1, Board.IndexToPos(i + fw), false, '\0');
                            for (int j = 0; j < 4; j++)
                            {
+                               move = moveHelper(pos1, Board.IndexToPos(i + fw) + char.ToLower(promPieces[j]), false, '\0');
                                move.PromPiece = promPieces[j];
                                moves.Add(move);
                            }
@@ -202,9 +202,9 @@ namespace UCI_Test
                         if (i % 8 != 0 && (board.board[i + cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove)) //capture
                         {
                             lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : '\0';
-                            move = moveHelper(pos1, Board.IndexToPos(i + cap1), true, lastCap);
                             for (int j = 0; j < 4; j++)
                             {
+                                move = moveHelper(pos1, Board.IndexToPos(i + cap1) + char.ToLower(promPieces[j]), true, lastCap);
                                 move.PromPiece = promPieces[j];
                                 moves.Add(move);
                             }
@@ -214,9 +214,9 @@ namespace UCI_Test
                         if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove))
                         {
                             lastCap = board.board[i + cap2] != null ? board.board[i + cap2].Notation : '\0';
-                            move = moveHelper(pos1, Board.IndexToPos(i + cap2), true, lastCap);
                             for (int j = 0; j < 4; j++)
                             {
+                                move = moveHelper(pos1, Board.IndexToPos(i + cap2) + char.ToLower(promPieces[j]), true, lastCap);
                                 move.PromPiece = promPieces[j];
                                 moves.Add(move);
                             }

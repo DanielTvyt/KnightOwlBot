@@ -146,7 +146,6 @@ namespace UCI_Test
                         if (move.Notation.Length == 5)
                         {
                             move.PromPiece = move.Notation[4];
-                            move.Notation = move.Notation.Remove(4,1);
                             if (board.IsWhiteToMove)
                             {
                                 move.PromPiece = char.ToUpper(move.PromPiece);

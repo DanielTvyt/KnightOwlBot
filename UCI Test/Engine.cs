@@ -7,8 +7,7 @@ namespace UCI_Test
 {
     internal class Engine
     {
-        private static int nodes = 0;
-        private static Random rand = new();
+        private static uint nodes = 0;
         public static ulong Perft(Board board, int depth)
         {
             Move[] legalMoves = Board.GetLegalMoves(board);
@@ -28,99 +27,52 @@ namespace UCI_Test
         }
         public static string Run(Board board, uint time, uint inc)
         {
-            Move bestmove = null;
             string pvString;
             if (time == 0)
             {
                 time = 500 * 100; //if no time is given search for 500ms
             }
-            uint maxTime = (time+inc) / 100;
+            uint maxTime = (time + inc) / 100;
             var watch = new Stopwatch();
             watch.Start();
+            List<string> pv = [];
+            nodes = 0;
             for (uint depth = 1; watch.ElapsedMilliseconds < maxTime; depth++)
             {
-                List<string> bestPv = [];
-                List<string> pv;      
-                nodes = 0;
-                int cp;
                 int score;
-                int maxScore = int.MinValue;
-                int minScore = int.MaxValue;
                 int alpha = int.MinValue;
                 int beta = int.MaxValue;
 
-                foreach (Move move in Board.GetLegalMoves(board))
+                (score, pv) = Engine.Search(board, depth, alpha, beta);
+
+                if (!board.IsWhiteToMove)
                 {
-                    board = Board.DoMove(move, board);
-
-                    (score, pv) = Engine.Search(board, depth, alpha, beta);
-
-                    board = Board.UndoMove(move, board);
-
-                    if (board.IsWhiteToMove)
-                    {
-                        if (score > maxScore)
-                        {
-                            maxScore = score;
-                            alpha = Math.Max(maxScore, alpha);
-                            pv.Add(move.Notation);
-                            bestPv = pv;
-                            bestmove = move;
-                            //Console.WriteLine("Max " + maxScore + " move " + bestmove.Notation);
-                        }
-                    }
-                    else
-                    {
-                        if (score < minScore)
-                        {
-                            minScore = score;
-                            beta = Math.Min(minScore, beta);
-                            pv.Add(move.Notation);
-                            bestPv = pv;
-                            bestmove = move;
-                            //Console.WriteLine("Min " + minScore + " move " + bestmove.Notation);
-                        }
-                    }
-
+                    score *= -1;
                 }
 
-                if (board.IsWhiteToMove)
-                {
-                    cp = maxScore;
-                }
-                else
-                {
-                    cp = minScore * -1;
-                }
+                long searchTime = watch.ElapsedMilliseconds == 0 ? 1 : watch.ElapsedMilliseconds;
 
-                bestPv.Reverse();
-                pvString = string.Join(" ", bestPv);
+                pv.Reverse();
+                pvString = string.Join(" ", pv);
 
-                Console.WriteLine("info depth " + depth + " time " + watch.ElapsedMilliseconds + " nodes " + nodes + " pv " + pvString + " score cp " + cp + " nps " + (1000 * nodes / (watch.ElapsedMilliseconds + 1)));
+                Console.WriteLine("info depth " + depth + " time " + searchTime + " nodes " + nodes + " pv " + pvString + " score cp " + score + " nps " + Convert.ToUInt32(nodes / (decimal) searchTime * 1000));
             }
-        
-
-            if (bestmove.PromPiece != '\0')
-            {
-                return bestmove.Notation + char.ToLower(bestmove.PromPiece);
-            }
-
-            return bestmove.Notation;
+            return pv[0];
         }
 
         private static (int, List<string>) Search(Board board, uint depth, int alpha, int beta)
         {
-            depth--;
             string bestMove = null;
             List<string> pv = [];
             List<string> bestPv = [];
 
-            if (depth <= 0)
+            if (depth == 0)
             {
                 return (Eval(board), pv);
             }
 
             Move[] moves = Board.GetLegalMoves(board);
+            moves = SortMoves(moves);
 
             if (moves.Length == 0)
             {
@@ -134,7 +86,7 @@ namespace UCI_Test
             {
                 board = Board.DoMove(move, board);
 
-                (score, pv) = Search(board, depth, alpha, beta);
+                (score, pv) = Search(board, depth - 1, alpha, beta);
 
                 board = Board.UndoMove(move, board);
 
@@ -179,16 +131,45 @@ namespace UCI_Test
             nodes++;
             int Material = 0;
 
-            foreach (Piece piece in board.board)
+            for (int i = 0; i < board.board.Length; i++)
             {
+                Piece piece = board.board[i];
                 if (piece == null)
                 {
                     continue;
                 }
+                //if (piece.Notation == 'P')
+                //{
+                //    Material -= i / 8;
+                //}
+                //else if (piece.Notation == 'p')
+                //{
+                //    Material += i / 8;
+                //}
                 Material += piece.Material;
             }
             //Material += rand.Next(10);
             return Material;
+        }
+
+        private static Move[] SortMoves(Move[] moves)
+        {
+            List<Move> sortedMoves = moves.ToList();
+            for (int i = 0; i < moves.Length; i++)
+            {
+                if (moves[i].IsCapture)
+                {
+                    sortedMoves.Insert(0, moves[i]);
+                    continue;
+                }
+                if (moves[i].PromPiece != '\0')
+                {
+                    sortedMoves.Insert(0, moves[i]);
+                    continue;
+                }
+                sortedMoves.Append(moves[i]);
+            }
+            return sortedMoves.ToArray();
         }
     }
 }
