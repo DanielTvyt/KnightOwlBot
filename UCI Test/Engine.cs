@@ -138,17 +138,16 @@ namespace UCI_Test
                 {
                     continue;
                 }
-                //if (piece.Notation == 'P')
-                //{
-                //    Material -= i / 8;
-                //}
-                //else if (piece.Notation == 'p')
-                //{
-                //    Material += i / 8;
-                //}
+                if (piece.Notation == 'P')
+                {
+                    Material -= i / 8;
+                }
+                else if (piece.Notation == 'p')
+                {
+                    Material += i / 8;
+                }
                 Material += piece.Material;
             }
-            //Material += rand.Next(10);
             return Material;
         }
 

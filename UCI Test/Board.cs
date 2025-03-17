@@ -7,7 +7,6 @@ namespace UCI_Test
     internal class Board
     {
         public Piece[] board { get; set; }
-        public string FenString { get; set; }
         public bool IsWhiteToMove { get; set; }
         public int EnPassentIndex {  get; set; }
 
@@ -15,14 +14,9 @@ namespace UCI_Test
         {
             Board boardOut = new()
             {
-                board = new Piece[64]
+                board = new Piece[64],
             };
             int y = 0;
-
-            for (int i = 0; i < 64; i++)
-            {
-                Piece.CreatePiece(' ');
-            }
 
             for (int i = 0; i < 64; i++)
             {
@@ -443,8 +437,8 @@ namespace UCI_Test
 
         private static bool isLegal(Board board, Move move)
         {
-            board = Board.DoMove(move, board);
-            Move[] moves = Board.GetCaptures(board);
+            board = DoMove(move, board);
+            Move[] moves = GetCaptures(board);
                          
             if (board.IsWhiteToMove)
             {
