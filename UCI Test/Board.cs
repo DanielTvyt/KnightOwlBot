@@ -87,13 +87,13 @@ namespace UCI_Test
                     if (i % 8 != 0 && (board.board[i + cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove)) //capture
                     {
                         lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : '\0';
-                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap1), true, lastCap));
+                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap1), true, lastCap, 0));
                     }
 
                     if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove))
                     {
                         lastCap = board.board[i + cap2] != null ? board.board[i + cap2].Notation : '\0';
-                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap2), true, lastCap));
+                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap2), true, lastCap, 0));
                     }
 
                     continue;
@@ -124,7 +124,7 @@ namespace UCI_Test
                         else if (board.board[j] != null)
                         {
                             lastCap = board.board[j].Notation;
-                            moves.Add(moveHelper(pos1, pos2, true, lastCap));
+                            moves.Add(moveHelper(pos1, pos2, true, lastCap, 0));
 
                             break;
                         }
@@ -187,7 +187,7 @@ namespace UCI_Test
                         {
                            for (int j = 0; j < 4; j++)
                            {
-                               move = moveHelper(pos1, Board.IndexToPos(i + fw) + char.ToLower(promPieces[j]), false, '\0');
+                               move = moveHelper(pos1, Board.IndexToPos(i + fw) + char.ToLower(promPieces[j]), false, '\0', 9);
                                move.PromPiece = promPieces[j];
                                moves.Add(move);
                            }
@@ -198,7 +198,7 @@ namespace UCI_Test
                             lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : '\0';
                             for (int j = 0; j < 4; j++)
                             {
-                                move = moveHelper(pos1, Board.IndexToPos(i + cap1) + char.ToLower(promPieces[j]), true, lastCap);
+                                move = moveHelper(pos1, Board.IndexToPos(i + cap1) + char.ToLower(promPieces[j]), true, lastCap, 10);
                                 move.PromPiece = promPieces[j];
                                 moves.Add(move);
                             }
@@ -210,7 +210,7 @@ namespace UCI_Test
                             lastCap = board.board[i + cap2] != null ? board.board[i + cap2].Notation : '\0';
                             for (int j = 0; j < 4; j++)
                             {
-                                move = moveHelper(pos1, Board.IndexToPos(i + cap2) + char.ToLower(promPieces[j]), true, lastCap);
+                                move = moveHelper(pos1, Board.IndexToPos(i + cap2) + char.ToLower(promPieces[j]), true, lastCap, 10);
                                 move.PromPiece = promPieces[j];
                                 moves.Add(move);
                             }
@@ -219,11 +219,11 @@ namespace UCI_Test
                     }
                     else if (board.board[i + fw] == null) //move one forward
                     {
-                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + fw), false, '\0'));
+                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + fw), false, '\0', 1));
 
                         if (i / 8 == start && board.board[i + fw2] == null) 
                         {
-                            move = moveHelper(pos1, Board.IndexToPos(i + fw2), false, '\0');
+                            move = moveHelper(pos1, Board.IndexToPos(i + fw2), false, '\0', 1);
                             move.EnPassentIndex = i + fw;
                             moves.Add(move);
                         }
@@ -232,13 +232,13 @@ namespace UCI_Test
                     if (i % 8 != 0 && (board.board[i+cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove || (i + cap1 == board.EnPassentIndex && i / 8 != start))) //capture
                     {
                         lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : '\0';
-                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap1), true, lastCap));
+                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap1), true, lastCap, 6));
                     }
 
                     if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove || (i + cap2 == board.EnPassentIndex && i / 8 != start)))
                     {
                         lastCap = board.board[i + cap2] != null ? board.board[i + cap2].Notation : '\0';
-                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap2), true, lastCap));
+                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap2), true, lastCap, 6));
                     }
 
 
@@ -265,7 +265,7 @@ namespace UCI_Test
 
                         if (board.board[j] == null)
                         {
-                            moves.Add(moveHelper(pos1, pos2, false, '\0'));
+                            moves.Add(moveHelper(pos1, pos2, false, '\0', 1));
                         }
                         else if (board.board[j].IsWhite == board.IsWhiteToMove)
                         {
@@ -274,7 +274,7 @@ namespace UCI_Test
                         else
                         {
                             lastCap = board.board[j].Notation;
-                            moves.Add(moveHelper(pos1, pos2, true, lastCap));
+                            moves.Add(moveHelper(pos1, pos2, true, lastCap, 5));
 
                             break;
                         }
@@ -423,13 +423,14 @@ namespace UCI_Test
             return board;
         }
 
-        private static Move moveHelper(string pos1, string pos2, bool isCapture, char lastCapture)
+        private static Move moveHelper(string pos1, string pos2, bool isCapture, char lastCapture, byte moveValue)
         {
             Move move = new()
             {
                 Notation = pos1 + pos2,
                 IsCapture = isCapture,
                 LastCapture = lastCapture,
+                MoveValue = moveValue
             };
 
             return move;

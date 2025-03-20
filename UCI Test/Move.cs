@@ -13,5 +13,6 @@ namespace UCI_Test
         public char PromPiece { get; set; }
         public char LastCapture { get; set; }
         public int EnPassentIndex { get; set; }
+        public byte MoveValue { get; set; }
     }
 }

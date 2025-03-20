@@ -37,7 +37,7 @@ namespace UCI_Test
             watch.Start();
             List<string> pv = [];
             nodes = 0;
-            for (uint depth = 1; watch.ElapsedMilliseconds < maxTime; depth++)
+            for (uint depth = 1; watch.ElapsedMilliseconds < maxTime || depth <= 1; depth++)
             {
                 int score;
                 int alpha = int.MinValue;
@@ -140,11 +140,11 @@ namespace UCI_Test
                 }
                 if (piece.Notation == 'P')
                 {
-                    Material -= i / 8;
+                    Material += 8 - i / 8;
                 }
                 else if (piece.Notation == 'p')
                 {
-                    Material += i / 8;
+                    Material -= i / 8;
                 }
                 Material += piece.Material;
             }
@@ -153,22 +153,8 @@ namespace UCI_Test
 
         private static Move[] SortMoves(Move[] moves)
         {
-            List<Move> sortedMoves = moves.ToList();
-            for (int i = 0; i < moves.Length; i++)
-            {
-                if (moves[i].IsCapture)
-                {
-                    sortedMoves.Insert(0, moves[i]);
-                    continue;
-                }
-                if (moves[i].PromPiece != '\0')
-                {
-                    sortedMoves.Insert(0, moves[i]);
-                    continue;
-                }
-                sortedMoves.Append(moves[i]);
-            }
-            return sortedMoves.ToArray();
+            Array.Sort(moves, delegate (Move x, Move y) { return x.MoveValue.CompareTo(y.MoveValue); });
+            return moves;
         }
     }
 }
