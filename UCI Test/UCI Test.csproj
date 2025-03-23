@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{A6CFE8F2-0128-4B11-897D-71E5A32FF691}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>UCI_Test</RootNamespace>
-    <AssemblyName>UCI Test</AssemblyName>
+    <RootNamespace>KnightOwlBot</RootNamespace>
+    <AssemblyName>KnightOwlBot</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <LangVersion>latest</LangVersion>
     <FileAlignment>512</FileAlignment>
@@ -40,7 +40,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>

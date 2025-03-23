@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace UCI_Test
+namespace KnightOwlBot
 {
     internal class Board
     {

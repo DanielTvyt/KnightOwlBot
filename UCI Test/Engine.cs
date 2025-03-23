@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
-namespace UCI_Test
+namespace KnightOwlBot
 {
     internal class Engine
     {

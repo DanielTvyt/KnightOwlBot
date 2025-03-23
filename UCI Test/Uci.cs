@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace UCI_Test
+namespace KnightOwlBot
 {
     internal class Uci
     {
-        public static Task Listen()
+        public static void Listen()
         { 
             string bestmove;
             string position = "";
