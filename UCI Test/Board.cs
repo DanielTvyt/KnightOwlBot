@@ -7,6 +7,7 @@ namespace KnightOwlBot
     internal class Board
     {
         public Piece[] board { get; set; }
+        public List<string> ThreeFold { get; set; }
         public bool IsWhiteToMove { get; set; }
         public int EnPassentIndex {  get; set; }
 
@@ -15,6 +16,7 @@ namespace KnightOwlBot
             Board boardOut = new()
             {
                 board = new Piece[64],
+                ThreeFold = []
             };
             int y = 0;
 
@@ -374,6 +376,7 @@ namespace KnightOwlBot
             }
 
             board.IsWhiteToMove = !board.IsWhiteToMove;
+            board.ThreeFold.Add(BoardToString(board.board));
 
             return board;
         }
@@ -420,7 +423,37 @@ namespace KnightOwlBot
                 }
             }
             board.EnPassentIndex = move.EnPassentIndex;
+            board.ThreeFold.RemoveAt(board.ThreeFold.Count - 1);
+
             return board;
+        }
+
+        public static bool IsDraw(Board board)
+        {
+            if (board.ThreeFold.Count < 3)
+            {
+                return false;
+            }
+            int count = 0;
+            string compare = BoardToString(board.board);
+            for (int i = 0; i < board.ThreeFold.Count; i++)
+            {
+                if (compare == board.ThreeFold[i])
+                {
+                    count++;
+                    if (count == 3)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private static string BoardToString(Piece[] pieces)
+        {
+            char[] chars = [.. pieces.Select(p => p == null ? ' ' : p.Notation)];
+            return new string(chars);
         }
 
         private static Move moveHelper(string pos1, string pos2, bool isCapture, char lastCapture, byte moveValue)

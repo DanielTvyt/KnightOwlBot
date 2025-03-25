@@ -128,6 +128,11 @@ namespace KnightOwlBot
         private static int Eval(Board board)
         {
             nodes++;
+            if (Board.IsDraw(board))
+            {
+                return 0;
+            }
+
             int Material = 0;
 
             for (int i = 0; i < board.board.Length; i++)
