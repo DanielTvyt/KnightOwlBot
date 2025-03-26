@@ -8,8 +8,8 @@ namespace KnightOwlBot
         { 
             string bestmove;
             string position = "";
-            
-            Board board = new();
+            Board board;
+
             while (true)
             {
                 uint time = 0;

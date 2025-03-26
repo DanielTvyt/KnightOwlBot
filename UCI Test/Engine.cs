@@ -61,9 +61,7 @@ namespace KnightOwlBot
 
         private static (int, List<string>) Search(Board board, uint depth, int alpha, int beta)
         {
-            string bestMove = null;
             List<string> pv = [];
-            List<string> bestPv = [];
 
             if (depth == 0)
             {
@@ -71,13 +69,15 @@ namespace KnightOwlBot
             }
 
             Move[] moves = Board.GetLegalMoves(board);
-            moves = SortMoves(moves);
 
             if (moves.Length == 0)
             {
                 return (board.IsWhiteToMove ? Convert.ToInt32(-10000 * depth) : Convert.ToInt32(10000 * depth), pv);
             }
 
+            string bestMove = null;
+            List<string> bestPv = [];
+            moves = SortMoves(moves);
             int score;
             int bestScore = board.IsWhiteToMove ? int.MinValue : int.MaxValue;
 

@@ -7,7 +7,7 @@ namespace KnightOwlBot
     internal class Board
     {
         public Piece[] board { get; set; }
-        public List<string> ThreeFold { get; set; }
+        public List<int> ThreeFold { get; set; }
         public bool IsWhiteToMove { get; set; }
         public int EnPassentIndex {  get; set; }
 
@@ -376,7 +376,7 @@ namespace KnightOwlBot
             }
 
             board.IsWhiteToMove = !board.IsWhiteToMove;
-            board.ThreeFold.Add(BoardToString(board.board));
+            board.ThreeFold.Add(BoardToString(board.board).GetHashCode());
 
             return board;
         }
@@ -434,17 +434,17 @@ namespace KnightOwlBot
             {
                 return false;
             }
-            int count = 0;
-            string compare = BoardToString(board.board);
-            for (int i = 0; i < board.ThreeFold.Count; i++)
+            bool count = false; // Three Fold at just two moves
+            int compare = board.ThreeFold[board.ThreeFold.Count - 1];
+            for (int i = 0; i < board.ThreeFold.Count - 1; i++)
             {
                 if (compare == board.ThreeFold[i])
                 {
-                    count++;
-                    if (count == 3)
+                    if (count)
                     {
                         return true;
                     }
+                    count = true;
                 }
             }
             return false;
