@@ -7,6 +7,54 @@ namespace KnightOwlBot
     internal class Engine
     {
         private static uint nodes = 0;
+        private static int[] pawnPST = {  0,   0,   0,   0,   0,   0,   0,   0,
+                                         30,  30,  30,  40,  40,  30,  30,  30,
+                                         20,  20,  20,  30,  30,  30,  20,  20,
+                                         10,  10,  15,  25,  25,  15,  10,  10,
+                                          5,   5,   5,  20,  20,   5,   5,   5,
+                                          5,   0,   0,   5,   5,   0,   0,   5,
+                                          5,   5,   5, -10, -10,   5,   5,   5,
+                                          0,   0,   0,   0,   0,   0,   0,   0};
+        private static int[] knightPST = { -5,  -5, -5, -5, -5, -5,  -5, -5,
+                                           -5,   0,  0, 10, 10,  0,   0, -5,
+                                           -5,   5, 10, 10, 10, 10,   5, -5,
+                                           -5,   5, 10, 15, 15, 10,   5, -5,
+                                           -5,   5, 10, 15, 15, 10,   5, -5,
+                                           -5,   5, 10, 10, 10, 10,   5, -5,
+                                           -5,   0,  0,  5,  5,  0,   0, -5,
+                                           -5, -10, -5, -5, -5, -5, -10, -5};
+        private static int[] bishopPST = { 0,   0,   0,   0,   0,   0,   0,   0,
+                                           0,   0,   0,   0,   0,   0,   0,   0,
+                                           0,   0,   0,   0,   0,   0,   0,   0,
+                                           0,  10,   0,   0,   0,   0,  10,   0,
+                                           5,   0,  10,   0,   0,  10,   0,   5,
+                                           0,  10,   0,  10,  10,   0,  10,   0,
+                                           0,  10,   0,  10,  10,   0,  10,   0,
+                                           0,   0, -10,   0,   0, -10,   0,   0};
+        private static int[] rookPST = { 10,  10,  10,  10,  10,  10,  10,  10,
+                                         10,  10,  10,  10,  10,  10,  10,  10,
+                                          0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,  10,  10,   0,   0,   0,
+                                          0,   0,   0,  10,  10,   5,   0,   0};
+        private static int[] queenPST = { -20, -10, -10, -5, -5, -10, -10, -20,
+                                          -10,   0,   0,  0,  0,   0,   0, -10,
+                                          -10,   0,   5,  5,  5,   5,   0, -10,
+                                           -5,   0,   5,  5,  5,   5,   0,  -5,
+                                           -5,   0,   5,  5,  5,   5,   0,  -5,
+                                          -10,   5,   5,  5,  5,   5,   0, -10,
+                                          -10,   0,   5,  0,  0,   0,   0, -10,
+                                          -20, -10, -10,  0,  0, -10, -10, -20};
+        private static int[] kingPST = { 0, 0,  0,  0,   0,  0,  0, 0,
+                                         0, 0,  0,  0,   0,  0,  0, 0,
+                                         0, 0,  0,  0,   0,  0,  0, 0,
+                                         0, 0,  0,  0,   0,  0,  0, 0,
+                                         0, 0,  0,  0,   0,  0,  0, 0,
+                                         0, 0,  0,  0,   0,  0,  0, 0,
+                                         0, 0,  0, -5,  -5, -5,  0, 0,
+                                         0, 0, 10, -5,  -5, -5, 10, 0};
         public static ulong Perft(Board board, int depth)
         {
             Move[] legalMoves = Board.GetLegalMoves(board);
@@ -142,13 +190,46 @@ namespace KnightOwlBot
                 {
                     continue;
                 }
-                if (piece.Notation == 'P')
+
+                switch (piece.Notation)
                 {
-                    Material += 8 - i / 8;
-                }
-                else if (piece.Notation == 'p')
-                {
-                    Material -= i / 8;
+                    case 'P':
+                        Material += pawnPST[63 - i];
+                        break;
+                    case 'N':
+                        Material += knightPST[63 - i];
+                        break;
+                    case 'B':
+                        Material += bishopPST[63 - i];
+                        break;
+                    case 'R':
+                        Material += rookPST[63 - i];
+                        break;
+                    case 'Q':
+                        Material += queenPST[63 - i];
+                        break;
+                    case 'K':
+                        Material += kingPST[63 - i];
+                        break;
+
+                    case 'p':
+                        Material -= pawnPST[i];
+                        break;
+                    case 'n':
+                        Material += knightPST[i];
+                        break;
+                    case 'b':
+                        Material += bishopPST[i];
+                        break;
+                    case 'r':
+                        Material += rookPST[i];
+                        break;
+                    case 'q':
+                        Material += queenPST[i];
+                        break;
+                    case 'k':
+                        Material += kingPST[i];
+                        break;
                 }
                 Material += piece.Material;
             }
