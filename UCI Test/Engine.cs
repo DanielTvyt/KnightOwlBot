@@ -7,7 +7,10 @@ namespace KnightOwlBot
     internal class Engine
     {
         private static uint nodes = 0;
-        private static int[] pawnPST = {  0,   0,   0,   0,   0,   0,   0,   0,
+        private static uint maxDepth;
+        private static long maxTime;
+        private static Stopwatch watch = new Stopwatch();
+        private static readonly int[] pawnPST = {  0,   0,   0,   0,   0,   0,   0,   0,
                                          30,  30,  30,  40,  40,  30,  30,  30,
                                          20,  20,  20,  30,  30,  30,  20,  20,
                                          10,  10,  15,  25,  25,  15,  10,  10,
@@ -15,7 +18,7 @@ namespace KnightOwlBot
                                           5,   0,   0,   5,   5,   0,   0,   5,
                                           5,   5,   5, -10, -10,   5,   5,   5,
                                           0,   0,   0,   0,   0,   0,   0,   0};
-        private static int[] knightPST = { -5,  -5, -5, -5, -5, -5,  -5, -5,
+        private static readonly int[] knightPST = { -5,  -5, -5, -5, -5, -5,  -5, -5,
                                            -5,   0,  0, 10, 10,  0,   0, -5,
                                            -5,   5, 10, 10, 10, 10,   5, -5,
                                            -5,   5, 10, 15, 15, 10,   5, -5,
@@ -23,7 +26,7 @@ namespace KnightOwlBot
                                            -5,   5, 10, 10, 10, 10,   5, -5,
                                            -5,   0,  0,  5,  5,  0,   0, -5,
                                            -5, -10, -5, -5, -5, -5, -10, -5};
-        private static int[] bishopPST = { 0,   0,   0,   0,   0,   0,   0,   0,
+        private static readonly int[] bishopPST = { 0,   0,   0,   0,   0,   0,   0,   0,
                                            0,   0,   0,   0,   0,   0,   0,   0,
                                            0,   0,   0,   0,   0,   0,   0,   0,
                                            0,  10,   0,   0,   0,   0,  10,   0,
@@ -31,7 +34,7 @@ namespace KnightOwlBot
                                            0,  10,   0,  10,  10,   0,  10,   0,
                                            0,  10,   0,  10,  10,   0,  10,   0,
                                            0,   0, -10,   0,   0, -10,   0,   0};
-        private static int[] rookPST = { 10,  10,  10,  10,  10,  10,  10,  10,
+        private static readonly int[] rookPST = { 10,  10,  10,  10,  10,  10,  10,  10,
                                          10,  10,  10,  10,  10,  10,  10,  10,
                                           0,   0,   0,   0,   0,   0,   0,   0,
                                           0,   0,   0,   0,   0,   0,   0,   0,
@@ -39,7 +42,7 @@ namespace KnightOwlBot
                                           0,   0,   0,   0,   0,   0,   0,   0,
                                           0,   0,   0,  10,  10,   0,   0,   0,
                                           0,   0,   0,  10,  10,   5,   0,   0};
-        private static int[] queenPST = { -20, -10, -10, -5, -5, -10, -10, -20,
+        private static readonly int[] queenPST = { -20, -10, -10, -5, -5, -10, -10, -20,
                                           -10,   0,   0,  0,  0,   0,   0, -10,
                                           -10,   0,   5,  5,  5,   5,   0, -10,
                                            -5,   0,   5,  5,  5,   5,   0,  -5,
@@ -47,7 +50,7 @@ namespace KnightOwlBot
                                           -10,   5,   5,  5,  5,   5,   0, -10,
                                           -10,   0,   5,  0,  0,   0,   0, -10,
                                           -20, -10, -10,  0,  0, -10, -10, -20};
-        private static int[] kingPST = { 0, 0,  0,  0,   0,  0,  0, 0,
+        private static readonly int[] kingPST = { 0, 0,  0,  0,   0,  0,  0, 0,
                                          0, 0,  0,  0,   0,  0,  0, 0,
                                          0, 0,  0,  0,   0,  0,  0, 0,
                                          0, 0,  0,  0,   0,  0,  0, 0,
@@ -79,31 +82,39 @@ namespace KnightOwlBot
             {
                 time = 500 * 100; //if no time is given search for 500ms
             }
-            uint maxTime = (time + inc) / 100;
-            var watch = new Stopwatch();
+            uint searchTime = (time + inc) / 100;
+            maxTime = (time + inc) / 10;
             watch.Start();
             List<string> pv = [];
             nodes = 0;
-            for (uint depth = 1; watch.ElapsedMilliseconds < maxTime || depth <= 1; depth++)
+            for (uint depth = 1; watch.ElapsedMilliseconds < searchTime || depth <= 1; depth++)
             {
-                int score;
+                maxDepth = depth;
+                int score = 0;
                 int alpha = int.MinValue;
                 int beta = int.MaxValue;
-
-                (score, pv) = Engine.Search(board, depth, alpha, beta);
+                try
+                {
+                    (score, pv) = Search(board, depth, alpha, beta);
+                }
+                catch
+                {
+                    continue;
+                }
 
                 if (!board.IsWhiteToMove)
                 {
                     score *= -1;
                 }
 
-                long searchTime = watch.ElapsedMilliseconds == 0 ? 1 : watch.ElapsedMilliseconds;
+                long takenTime = watch.ElapsedMilliseconds == 0 ? 1 : watch.ElapsedMilliseconds;
 
                 pv.Reverse();
                 pvString = string.Join(" ", pv);
 
-                Console.WriteLine("info depth " + depth + " time " + searchTime + " nodes " + nodes + " pv " + pvString + " score cp " + score + " nps " + Convert.ToUInt32(nodes / (decimal) searchTime * 1000));
+                Console.WriteLine("info depth " + depth + " time " + takenTime + " nodes " + nodes + " pv " + pvString + " score cp " + score + " nps " + Convert.ToUInt32(nodes / (decimal) takenTime * 1000));
             }
+            watch = new Stopwatch();
             return pv[0];
         }
 
@@ -114,6 +125,11 @@ namespace KnightOwlBot
             if (depth == 0)
             {
                 return (Eval(board), pv);
+            }
+
+            if (watch.ElapsedMilliseconds > maxTime && maxDepth > 1)
+            {
+                throw new Exception("0");
             }
 
             Move[] moves = Board.GetLegalMoves(board);
