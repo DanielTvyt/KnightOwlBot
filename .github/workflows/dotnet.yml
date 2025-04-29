@@ -22,7 +22,7 @@ jobs:
       run: msbuild KnightOwlBot.sln /p:Configuration=Release
 
     - name: Upload EXE as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v3.1.3
       with:
         name: KnightOwlBot-exe
         path: KnightOwlBot\bin\Release\KnightOwlBot.exe
