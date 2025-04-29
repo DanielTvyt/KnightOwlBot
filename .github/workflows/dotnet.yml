@@ -16,14 +16,15 @@ jobs:
       uses: microsoft/setup-msbuild@v1.3
 
     - name: Restore NuGet packages
-      run: nuget restore KnightOwlBot.sln
+      run: nuget restore "UCI Test.sln"
 
     - name: Build
-      run: msbuild KnightOwlBot.sln /p:Configuration=Release
+      run: msbuild "UCI Test.sln" /p:Configuration=Release
 
     - name: Upload EXE as artifact
       uses: actions/upload-artifact@v4
       with:
-        name: KnightOwlBot-exe
-        path: KnightOwlBot\bin\Release\KnightOwlBot.exe
+        name: UCI-Test-exe
+        path: "UCI Test\\bin\\Release\\UCI Test.exe"
+
 
