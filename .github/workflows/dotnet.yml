@@ -19,12 +19,10 @@ jobs:
       run: nuget restore "UCI Test.sln"
 
     - name: Build
-      run: msbuild "UCI Test.sln" /p:Configuration=Release
+      run: msbuild "UCI Test.sln" /p:Configuration=Release /p:Platform="Any CPU"
 
     - name: Upload EXE as artifact
       uses: actions/upload-artifact@v4
       with:
         name: UCI-Test-exe
-        path: "UCI Test\\bin\\Release\\UCI Test.exe"
-
-
+        path: "UCI Test\\bin\\Release\\KnightOwlBot.exe"
