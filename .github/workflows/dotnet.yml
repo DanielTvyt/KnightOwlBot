@@ -1,0 +1,28 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: Build .NET Framework
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1.3
+
+    - name: Restore NuGet packages
+      run: nuget restore "UCI Test.sln"
+
+    - name: Build
+      run: msbuild "UCI Test.sln" /p:Configuration=Release /p:Platform="Any CPU"
+
+    - name: Upload EXE as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: UCI-Test-exe
+        path: "UCI Test\\bin\\Release\\KnightOwlBot.exe"
