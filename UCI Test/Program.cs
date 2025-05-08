@@ -17,6 +17,7 @@ namespace KnightOwlBot
 
             Board.PrintBoard(board1);
             Move[] tests = Board.GetLegalMoves(board1);
+            Console.WriteLine(tests.Length);
             foreach (Move test in tests)
             {
                 board1 = Board.DoMove(test, board1);
@@ -47,14 +48,14 @@ namespace KnightOwlBot
                 }
                 
                 timer1.Stop();
-                Console.WriteLine("ply: " + i + " Time: " + timer1.ElapsedMilliseconds + " Nodes: " + nodes);
+                Console.WriteLine("ply: " + i + " Time: " + timer1.ElapsedMilliseconds + " Nodes: " + nodes + " knps " + nodes/((ulong)timer1.ElapsedMilliseconds + 1));
             }
             Move move = new Move();
             move.Notation = "e2e4";
             
             var timer = System.Diagnostics.Stopwatch.StartNew();
             timer.Start();
-            for (int i = 1; i <= 5000000; i++)
+            for (int i = 1; i <= 100000; i++)
             {
                 //Board.GetCaptures(board1);
             }

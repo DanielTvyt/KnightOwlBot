@@ -104,6 +104,52 @@ namespace KnightOwlBot
                     board = Uci.GetPos(position);
                     Board.PrintBoard(board);
                 }
+                else if (UciIn.Contains("perft"))
+                {
+                    int depth;
+                    board = Uci.GetPos(position);
+                    try
+                    {
+                        depth = Convert.ToInt32(UciIn[6].ToString());
+                        Console.WriteLine(depth);
+                    }
+                    catch
+                    {
+                        Console.WriteLine("No Depth given so were searching for a depth of 4");
+                        depth = 4;
+                    }
+                    for (int i = 1; i <= depth; i++)
+                    {
+                        var timer1 = System.Diagnostics.Stopwatch.StartNew();
+                        ulong nodes = 0;
+                        ulong curNodes;
+                        timer1.Start();
+                        Move[] moves = Board.GetLegalMoves(board);
+                        if (i == 1)
+                        {
+                            foreach (var move in moves)
+                            {
+                                nodes++;
+                                Console.WriteLine(move.Notation + ": 1");
+                            }
+                            timer1.Stop();
+                            Console.WriteLine("ply: " + i + " Time " + timer1.ElapsedMilliseconds + " Nodes " + nodes + " knps " + nodes / ((ulong)timer1.ElapsedMilliseconds + 1));
+                            continue;
+                        }
+                        for (int j = 0; j < moves.Length; j++)
+                        {
+                            board = Board.DoMove(moves[j], board);
+                            Console.Write(moves[j].Notation + ": ");
+                            curNodes = Engine.Perft(board, i - 1);
+                            Console.WriteLine(curNodes);
+                            nodes += curNodes;
+                            board = Board.UndoMove(moves[j], board);
+                        }
+                        timer1.Stop();
+                        Console.WriteLine("ply: " + i + " Time " + timer1.ElapsedMilliseconds + " Nodes " + nodes + " knps " + nodes / ((ulong)timer1.ElapsedMilliseconds + 1));
+                    }
+
+                }
                 else if (UciIn == "quit")
                 {
                     Environment.Exit(0);

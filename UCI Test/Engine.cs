@@ -58,6 +58,7 @@ namespace KnightOwlBot
                                          0, 0,  0,  0,   0,  0,  0, 0,
                                          0, 0,  0, -5,  -5, -5,  0, 0,
                                          0, 0, 10, -5,  -5, -5, 10, 0};
+
         public static ulong Perft(Board board, int depth)
         {
             Move[] legalMoves = Board.GetLegalMoves(board);
@@ -75,9 +76,9 @@ namespace KnightOwlBot
             }
             return leaves;
         }
+
         public static string Run(Board board, uint time, uint inc)
         {
-            string pvString;
             if (time == 0)
             {
                 time = 500 * 100; //if no time is given search for 500ms
@@ -93,14 +94,14 @@ namespace KnightOwlBot
                 int score = 0;
                 int alpha = int.MinValue;
                 int beta = int.MaxValue;
-                try
-                {
+                //try
+                //{
                     (score, pv) = Search(board, depth, alpha, beta);
-                }
-                catch
-                {
-                    continue;
-                }
+                //}
+                //catch
+                //{
+                //    continue;
+                //}
 
                 if (!board.IsWhiteToMove)
                 {
@@ -110,7 +111,7 @@ namespace KnightOwlBot
                 long takenTime = watch.ElapsedMilliseconds == 0 ? 1 : watch.ElapsedMilliseconds;
 
                 pv.Reverse();
-                pvString = string.Join(" ", pv);
+                string pvString = string.Join(" ", pv);
 
                 Console.WriteLine("info depth " + depth + " time " + takenTime + " nodes " + nodes + " pv " + pvString + " score cp " + score + " nps " + Convert.ToUInt32(nodes / (decimal) takenTime * 1000));
             }
@@ -129,7 +130,8 @@ namespace KnightOwlBot
 
             if (watch.ElapsedMilliseconds > maxTime && maxDepth > 1)
             {
-                throw new Exception("0");
+                Console.Write(".");
+                //throw new Exception("0");
             }
 
             Move[] moves = Board.GetLegalMoves(board);
@@ -209,41 +211,41 @@ namespace KnightOwlBot
 
                 switch (piece.Notation)
                 {
-                    case 'P':
+                    case 0:
                         Material += pawnPST[63 - i];
                         break;
-                    case 'N':
+                    case 1:
                         Material += knightPST[63 - i];
                         break;
-                    case 'B':
+                    case 2:
                         Material += bishopPST[63 - i];
                         break;
-                    case 'R':
+                    case 3:
                         Material += rookPST[63 - i];
                         break;
-                    case 'Q':
+                    case 4:
                         Material += queenPST[63 - i];
                         break;
-                    case 'K':
+                    case 5:
                         Material += kingPST[63 - i];
                         break;
 
-                    case 'p':
+                    case 6:
                         Material -= pawnPST[i];
                         break;
-                    case 'n':
+                    case 7:
                         Material += knightPST[i];
                         break;
-                    case 'b':
+                    case 8:
                         Material += bishopPST[i];
                         break;
-                    case 'r':
+                    case 9:
                         Material += rookPST[i];
                         break;
-                    case 'q':
+                    case 10:
                         Material += queenPST[i];
                         break;
-                    case 'k':
+                    case 11:
                         Material += kingPST[i];
                         break;
                 }
