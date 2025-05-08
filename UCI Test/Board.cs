@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.AccessControl;
 
 namespace KnightOwlBot
 {
@@ -10,6 +12,17 @@ namespace KnightOwlBot
         public List<int> ThreeFold { get; set; }
         public bool IsWhiteToMove { get; set; }
         public int EnPassentIndex {  get; set; }
+
+        private Board Clone()
+        {
+            return new Board
+            {
+                board = (Piece[])this.board.Clone(),
+                ThreeFold = new List<int>(this.ThreeFold),
+                IsWhiteToMove = this.IsWhiteToMove,
+                EnPassentIndex = this.EnPassentIndex
+            };
+        }
 
         public static Board BuildFromFenString(string fenString)
         {
@@ -309,29 +322,30 @@ namespace KnightOwlBot
 
         public static Board DoMove(Move move, Board board)
         {
+            Board newBoard = board.Clone();
             int index1 = move.Notation[0] - 96 + 64 - 8 * Convert.ToInt32(new string(move.Notation[1], 1)) - 1; //index of lower case letter in alphabet (a = 1, b = 2, ...)
             int index2 = move.Notation[2] - 96 + 64 - 8 * Convert.ToInt32(new string(move.Notation[3], 1)) - 1;
 
-            board.board[index2] = board.board[index1];
-            board.board[index1] = null;
+            newBoard.board[index2] = newBoard.board[index1];
+            newBoard.board[index1] = null;
 
-            if (board.board[index2].Material == 0)
+            if (newBoard.board[index2].Material == 0)
             {
                 if (index1 == 60 || index1 == 4)
                 {
                     int rookMove = 0;
                     char rook;
-                    if (board.IsWhiteToMove)
+                    if (newBoard.IsWhiteToMove)
                     {
                         rook = 'R';
                         if (index2 == 62)
                         {
-                            board.board[63] = null;
+                            newBoard.board[63] = null;
                             rookMove = 61;
                         }
                         else if (index2 == 58)
                         {
-                            board.board[56] = null;
+                            newBoard.board[56] = null;
                             rookMove = 59;
                         }
                     }
@@ -340,92 +354,44 @@ namespace KnightOwlBot
                         rook = 'r';
                         if(index2 == 6)
                         {
-                            board.board[7] = null;
+                            newBoard.board[7] = null;
                             rookMove = 5;
                         }
                         else if (index2 == 2)
                         {
-                            board.board[0] = null;
+                            newBoard.board[0] = null;
                             rookMove = 3;
                         }
                     }
                     if (rookMove != 0)
                     {
-                        board.board[rookMove] = Piece.CreatePiece(rook);
+                        newBoard.board[rookMove] = Piece.CreatePiece(rook);
                     }
                 }
             }
 
             if (move.PromPiece != '\0')
             {
-                board.board[index2] = Piece.CreatePiece(move.PromPiece);
+                newBoard.board[index2] = Piece.CreatePiece(move.PromPiece);
             }
 
-            board.EnPassentIndex = move.EnPassentIndex;
+            newBoard.EnPassentIndex = move.EnPassentIndex;
 
             if (move.IsCapture && move.LastCapture == '\0')
             {
-                if(board.IsWhiteToMove)
+                if(newBoard.IsWhiteToMove)
                 {
-                    board.board[index2 + 8] = null;
+                    newBoard.board[index2 + 8] = null;
                 }
                 else
                 {
-                    board.board[index2 - 8] = null;
+                    newBoard.board[index2 - 8] = null;
                 }
             }
+            newBoard.IsWhiteToMove = !newBoard.IsWhiteToMove;
+            newBoard.ThreeFold.Add(BoardToString(newBoard.board).GetHashCode());
 
-            board.IsWhiteToMove = !board.IsWhiteToMove;
-            board.ThreeFold.Add(BoardToString(board.board).GetHashCode());
-
-            return board;
-        }
-
-        public static Board UndoMove(Move move, Board board)
-        {
-            Move newMove = new()
-            {
-                Notation = Convert.ToString("" + move.Notation[2] + move.Notation[3] + move.Notation[0] + move.Notation[1])  //e2e4
-            };
-
-            if (move.PromPiece != '\0')
-            {
-                char pawn = board.IsWhiteToMove ? 'p' : 'P';
-                board.board[newMove.Notation[0] - 96 + 64 - 8 * Convert.ToInt32(new string(newMove.Notation[1], 1)) - 1] = Piece.CreatePiece(pawn);
-            }
-            //Do Move
-            int index1 = newMove.Notation[0] - 96 + 64 - 8 * Convert.ToInt32(new string(newMove.Notation[1], 1)) - 1;
-            int index2 = newMove.Notation[2] - 96 + 64 - 8 * Convert.ToInt32(new string(newMove.Notation[3], 1)) - 1;
-
-            board.board[index2] = board.board[index1];
-            board.board[index1] = null;
-
-            board.IsWhiteToMove = !board.IsWhiteToMove;
-            //Do Move
-
-            if (move.IsCapture)
-            {
-                if (move.LastCapture == '\0') //En Passent
-                {
-                    int offset = board.IsWhiteToMove ? 8 : -8;
-                    char pawn = board.IsWhiteToMove ? 'p' : 'P';
-                    int pos1 = index1 + offset;
-                    board.board[pos1] = Piece.CreatePiece(pawn);
-                }
-                else
-                {
-                    int[] pos1 =
-                    [
-                        newMove.Notation[0] - 96,   //index of lower case letter in alphabet (a = 1, b = 2, ...)
-                        64 - 8 * Convert.ToInt32(new string(newMove.Notation[1], 1)) - 1,
-                    ];
-                    board.board[pos1[0] + pos1[1]] = Piece.CreatePiece(move.LastCapture);
-                }
-            }
-            board.EnPassentIndex = move.EnPassentIndex;
-            board.ThreeFold.RemoveAt(board.ThreeFold.Count - 1);
-
-            return board;
+            return newBoard;
         }
 
         public static bool IsDraw(Board board)
@@ -471,38 +437,20 @@ namespace KnightOwlBot
 
         private static bool isLegal(Board board, Move move)
         {
-            board = DoMove(move, board);
-            Move[] moves = GetCaptures(board);
-                         
-            if (board.IsWhiteToMove)
+            Board[] boards = new Board[3];
+            boards[0] = board.Clone();
+            boards[1] = DoMove(move, boards[0]);
+            Move[] moves = GetCaptures(boards[1]);
+            char king = board.IsWhiteToMove ? 'K' : 'k';
+
+            foreach (Move LegalMove in moves)
             {
-                foreach (Move LegalMove in moves)
+                boards[2] = Board.DoMove(LegalMove, boards[1]);
+                if (!boards[2].board.Any(Piece => Piece != null && Piece.Notation == king))
                 {
-                    Board.DoMove(LegalMove, board);
-                    if (!board.board.Any(Piece => Piece != null && Piece.Notation == 'k'))
-                    {
-                        Board.UndoMove(LegalMove, board);
-                        Board.UndoMove(move, board);
-                        return false;
-                    }
-                    Board.UndoMove(LegalMove, board);
+                    return false;
                 }
             }
-            else
-            {
-                foreach (Move LegalMove in moves)
-                {
-                    Board.DoMove(LegalMove, board);
-                    if (!board.board.Any(Piece => Piece != null && Piece.Notation == 'K'))
-                    {
-                        Board.UndoMove(LegalMove, board);
-                        Board.UndoMove(move, board);
-                        return false;
-                    }
-                    Board.UndoMove(LegalMove, board);
-                }
-            }
-            Board.UndoMove(move, board);
             return true;
         }
 

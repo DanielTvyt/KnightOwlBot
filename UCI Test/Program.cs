@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace KnightOwlBot
 {
@@ -12,21 +13,22 @@ namespace KnightOwlBot
             }
 
             //startpos rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
-            Board board1 = new Board();
-            board1 = Board.BuildFromFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-            Board.PrintBoard(board1);
-            Move[] tests = Board.GetLegalMoves(board1);
+            Board[] boards = new Board[10];
+
+            boards[0] = Board.BuildFromFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            Board postion = boards[0]; 
+
+            Board.PrintBoard(boards[0]);
+            Move[] tests = Board.GetLegalMoves(boards[0]);
             foreach (Move test in tests)
             {
-                board1 = Board.DoMove(test, board1);
+                boards[1] = Board.DoMove(test, boards[0]);
             
                 Console.WriteLine(test.Notation);
-                Board.PrintBoard(board1);
-            
-                board1 = Board.UndoMove(test, board1);
+                Board.PrintBoard(boards[1]);
             }
-
+            
             Console.ReadLine();
             for (int i = 1; i <= 7; i++)
             {
@@ -34,16 +36,18 @@ namespace KnightOwlBot
                 ulong nodes = 0;
                 ulong curNodes;
                 timer1.Start();
-                Move[] moves = Board.GetLegalMoves(board1);
+                int ply = 1;
+                boards = new Board[i + 1];
+                boards[0] = postion;
+                Move[] moves = Board.GetLegalMoves(boards[ply - 1]);
                 Console.WriteLine(moves.Length);
                 for (int j = 0; j < moves.Length; j++)
                 {
-                    board1 = Board.DoMove(moves[j], board1);
+                    boards[ply] = Board.DoMove(moves[j], boards[ply - 1]);
                     Console.Write(moves[j].Notation + ": ");
-                    curNodes = Engine.Perft(board1, i - 1);
+                    curNodes = Engine.Perft(boards, i, (ply + 1));
                     Console.WriteLine(curNodes);
                     nodes += curNodes;
-                    board1 = Board.UndoMove(moves[j], board1);
                 }
                 
                 timer1.Stop();
@@ -56,7 +60,7 @@ namespace KnightOwlBot
             timer.Start();
             for (int i = 1; i <= 5000000; i++)
             {
-                //Board.GetCaptures(board1);
+                Board.DoMove(move, boards[0]);
             }
             timer.Stop();
             Console.WriteLine("Time: " + timer.ElapsedMilliseconds);

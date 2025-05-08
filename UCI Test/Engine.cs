@@ -58,9 +58,10 @@ namespace KnightOwlBot
                                          0, 0,  0,  0,   0,  0,  0, 0,
                                          0, 0,  0, -5,  -5, -5,  0, 0,
                                          0, 0, 10, -5,  -5, -5, 10, 0};
-        public static ulong Perft(Board board, int depth)
+
+        public static ulong Perft(Board[] boards, int depth, int ply)
         {
-            Move[] legalMoves = Board.GetLegalMoves(board);
+            Move[] legalMoves = Board.GetLegalMoves(boards[ply - 1]);
             ulong leaves = 0;
             depth--;
             if (depth < 1)
@@ -69,9 +70,8 @@ namespace KnightOwlBot
             }
             foreach (Move move in legalMoves)
             {
-                board = Board.DoMove(move, board);
-                leaves += Perft(board, depth);
-                board = Board.UndoMove(move, board);
+                boards[ply] = Board.DoMove(move, boards[ply - 1]);
+                leaves += Perft(boards, depth, ply + 1);
             }
             return leaves;
         }
@@ -89,13 +89,16 @@ namespace KnightOwlBot
             nodes = 0;
             for (uint depth = 1; watch.ElapsedMilliseconds < searchTime || depth <= 1; depth++)
             {
+                Board[] boards = new Board[depth + 1];
+                boards[0] = board;
+                uint ply = 0;
                 maxDepth = depth;
                 int score = 0;
                 int alpha = int.MinValue;
                 int beta = int.MaxValue;
                 try
                 {
-                    (score, pv) = Search(board, depth, alpha, beta);
+                    (score, pv) = Search(boards, depth, ply + 1, alpha, beta);
                 }
                 catch
                 {
@@ -118,42 +121,38 @@ namespace KnightOwlBot
             return pv[0];
         }
 
-        private static (int, List<string>) Search(Board board, uint depth, int alpha, int beta)
+        private static (int, List<string>) Search(Board[] board, uint depth, uint ply, int alpha, int beta)
         {
             List<string> pv = [];
 
             if (depth == 0)
             {
-                return (Eval(board), pv);
+                return (Eval(board[ply - 1]), pv);
             }
 
             if (watch.ElapsedMilliseconds > maxTime && maxDepth > 1)
             {
                 throw new Exception("0");
             }
-
-            Move[] moves = Board.GetLegalMoves(board);
+            Move[] moves = Board.GetLegalMoves(board[ply - 1]);
 
             if (moves.Length == 0)
             {
-                return (board.IsWhiteToMove ? Convert.ToInt32(-10000 * depth) : Convert.ToInt32(10000 * depth), pv);
+                return (board[ply - 1].IsWhiteToMove ? Convert.ToInt32(-10000 * depth) : Convert.ToInt32(10000 * depth), pv);
             }
-
             string bestMove = null;
             List<string> bestPv = [];
             moves = SortMoves(moves);
             int score;
-            int bestScore = board.IsWhiteToMove ? int.MinValue : int.MaxValue;
+            int bestScore = board[ply - 1].IsWhiteToMove ? int.MinValue : int.MaxValue;
 
             foreach (Move move in moves)
             {
-                board = Board.DoMove(move, board);
+                board[ply] = Board.DoMove(move, board[ply - 1]);
 
-                (score, pv) = Search(board, depth - 1, alpha, beta);
+                (score, pv) = Search(board, depth - 1, ply + 1, alpha, beta);
 
-                board = Board.UndoMove(move, board);
-
-                if (board.IsWhiteToMove)
+                if (board[ply - 1].IsWhiteToMove)
                 {
                     if (beta <= score)
                     {
