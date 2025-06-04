@@ -11,13 +11,13 @@ namespace KnightOwlBot
         private static long maxTime;
         private static Stopwatch watch = new Stopwatch();
         private static readonly int[] pawnPST = {  0,   0,   0,   0,   0,   0,   0,   0,
-                                         30,  30,  30,  40,  40,  30,  30,  30,
-                                         20,  20,  20,  30,  30,  30,  20,  20,
-                                         10,  10,  15,  25,  25,  15,  10,  10,
-                                          5,   5,   5,  20,  20,   5,   5,   5,
-                                          5,   0,   0,   5,   5,   0,   0,   5,
-                                          5,   5,   5, -10, -10,   5,   5,   5,
-                                          0,   0,   0,   0,   0,   0,   0,   0};
+                                                  30,  30,  30,  40,  40,  30,  30,  30,
+                                                  20,  20,  20,  30,  30,  30,  20,  20,
+                                                  10,  10,  15,  25,  25,  15,  10,  10,
+                                                   5,   5,   5,  20,  20,   5,   5,   5,
+                                                   5,   0,   0,   5,   5,   0,   0,   5,
+                                                   5,   5,   5, -10, -10,   5,   5,   5,
+                                                   0,   0,   0,   0,   0,   0,   0,   0};
         private static readonly int[] knightPST = { -5,  -5, -5, -5, -5, -5,  -5, -5,
                                            -5,   0,  0, 10, 10,  0,   0, -5,
                                            -5,   5, 10, 10, 10, 10,   5, -5,
@@ -209,41 +209,41 @@ namespace KnightOwlBot
                 switch (piece.Notation)
                 {
                     case 'P':
-                        Material += pawnPST[63 - i];
+                        Material += pawnPST[i];
                         break;
                     case 'N':
-                        Material += knightPST[63 - i];
+                        Material += knightPST[i];
                         break;
                     case 'B':
-                        Material += bishopPST[63 - i];
+                        Material += bishopPST[i];
                         break;
                     case 'R':
-                        Material += rookPST[63 - i];
+                        Material += rookPST[i];
                         break;
                     case 'Q':
-                        Material += queenPST[63 - i];
+                        Material += queenPST[i];
                         break;
                     case 'K':
-                        Material += kingPST[63 - i];
+                        Material += kingPST[i];
                         break;
 
                     case 'p':
-                        Material -= pawnPST[i];
+                        Material -= pawnPST[63 - i];
                         break;
                     case 'n':
-                        Material += knightPST[i];
+                        Material -= knightPST[63 - i];
                         break;
                     case 'b':
-                        Material += bishopPST[i];
+                        Material -= bishopPST[63 - i];
                         break;
                     case 'r':
-                        Material += rookPST[i];
+                        Material -= rookPST[63 - i];
                         break;
                     case 'q':
-                        Material += queenPST[i];
+                        Material -= queenPST[63 - i];
                         break;
                     case 'k':
-                        Material += kingPST[i];
+                        Material -= kingPST[63 - i];
                         break;
                 }
                 Material += piece.Material;

@@ -17,7 +17,7 @@ namespace KnightOwlBot
             Board[] boards = new Board[10];
 
             boards[0] = Board.BuildFromFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-            Board postion = boards[0]; 
+            Board postion = boards[0];
 
             Board.PrintBoard(boards[0]);
             Move[] tests = Board.GetLegalMoves(boards[0]);
