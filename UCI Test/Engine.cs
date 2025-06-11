@@ -93,7 +93,7 @@ namespace KnightOwlBot
                 boards[0] = board;
                 uint ply = 0;
                 maxDepth = depth;
-                int score = 0;
+                int score;
                 int alpha = int.MinValue;
                 int beta = int.MaxValue;
                 try
@@ -134,6 +134,7 @@ namespace KnightOwlBot
             {
                 throw new Exception("0");
             }
+
             Move[] moves = Board.GetLegalMoves(board[ply - 1]);
 
             if (moves.Length == 0)

@@ -18,7 +18,7 @@ namespace KnightOwlBot
             return new Board
             {
                 board = (Piece[])this.board.Clone(),
-                ThreeFold = new List<int>(this.ThreeFold),
+                ThreeFold = [.. this.ThreeFold],
                 IsWhiteToMove = this.IsWhiteToMove,
                 EnPassentIndex = this.EnPassentIndex
             };
@@ -79,6 +79,9 @@ namespace KnightOwlBot
             string pos2;
             int index = 0;
 
+            int cap1 = board.IsWhiteToMove ? -9 : 7;
+            int cap2 = board.IsWhiteToMove ? -7 : 9;
+
             for (int i = 0; i < 64; i++)
             {
                 index++;
@@ -91,14 +94,6 @@ namespace KnightOwlBot
 
                 if (board.board[i].Notation is 'P' or 'p')
                 {
-                    int cap1 = 7;
-                    int cap2 = 9;
-                    if (board.IsWhiteToMove)
-                    {
-                        cap1 = -9;
-                        cap2 = -7;
-                    }
-
                     if (i % 8 != 0 && (board.board[i + cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove)) //capture
                     {
                         lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : '\0';
@@ -167,6 +162,14 @@ namespace KnightOwlBot
             string pos2;
             int index = 0;
 
+            string promPieces = board.IsWhiteToMove ? "QRBN" : "qrbn";
+            int fw = board.IsWhiteToMove ? -8 : 8;
+            int fw2 = board.IsWhiteToMove ? -16 : 16;
+            int cap1 = board.IsWhiteToMove ? -9 : 7;
+            int cap2 = board.IsWhiteToMove ? -7 : 9;
+            int start = board.IsWhiteToMove ? 6 : 1; // start row
+            int prom = board.IsWhiteToMove ? 0 : 7;
+
             for (int i = 0; i < 64; i++)
             {
                 index++;
@@ -179,23 +182,6 @@ namespace KnightOwlBot
 
                 if (board.board[i].Notation is 'P' or 'p')
                 {
-                    string promPieces = "qrbn";
-                    int fw = 8;
-                    int fw2 = 16;
-                    int cap1 = 7;
-                    int cap2 = 9;
-                    int start = 1; // start row
-                    int prom = 7;
-                    if (board.IsWhiteToMove)
-                    {
-                        promPieces = "QRBN";
-                        fw = -8;
-                        fw2 = -16;
-                        cap1 = -9;
-                        cap2 = -7;
-                        start = 6;
-                        prom = 0;
-                    }
                     if ((i + fw) / 8 == prom) //Promotion
                     {
                         if (board.board[i + fw] == null)
