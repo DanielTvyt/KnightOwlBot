@@ -192,10 +192,6 @@ namespace KnightOwlBot
         private static int Eval(Board board)
         {
             nodes++;
-            if (Board.IsDraw(board))
-            {
-                return 0;
-            }
 
             int Material = 0;
 
@@ -209,41 +205,41 @@ namespace KnightOwlBot
 
                 switch (piece.Notation)
                 {
-                    case 'P':
+                    case 1:
                         Material += pawnPST[i];
                         break;
-                    case 'N':
+                    case 2:
                         Material += knightPST[i];
                         break;
-                    case 'B':
+                    case 3:
                         Material += bishopPST[i];
                         break;
-                    case 'R':
+                    case 4:
                         Material += rookPST[i];
                         break;
-                    case 'Q':
+                    case 5:
                         Material += queenPST[i];
                         break;
-                    case 'K':
+                    case 6:
                         Material += kingPST[i];
                         break;
 
-                    case 'p':
+                    case 7:
                         Material -= pawnPST[63 - i];
                         break;
-                    case 'n':
+                    case 8:
                         Material -= knightPST[63 - i];
                         break;
-                    case 'b':
+                    case 9:
                         Material -= bishopPST[63 - i];
                         break;
-                    case 'r':
+                    case 10:
                         Material -= rookPST[63 - i];
                         break;
-                    case 'q':
+                    case 11:
                         Material -= queenPST[63 - i];
                         break;
-                    case 'k':
+                    case 12:
                         Material -= kingPST[63 - i];
                         break;
                 }

@@ -104,6 +104,53 @@ namespace KnightOwlBot
                     board = Uci.GetPos(position);
                     Board.PrintBoard(board);
                 }
+                else if (UciIn.Contains("perft"))
+                {
+                    int depth;
+                    board = Uci.GetPos(position);
+                    try
+                    {
+                        depth = Convert.ToInt32(UciIn[6].ToString());
+                        Console.WriteLine(depth);
+                    }
+                    catch
+                    {
+                        Console.WriteLine("No Depth given so were searching for a depth of 4");
+                        depth = 4;
+                    }
+                    for (int i = 0; i <= depth; i++)
+                    {
+                        var timer1 = System.Diagnostics.Stopwatch.StartNew();
+                        ulong nodes = 0;
+                        ulong curNodes;
+                        timer1.Start();
+                        Move[] moves = Board.GetLegalMoves(board);
+                        int ply = 1;
+                        Board[] boards = new Board[i + 1];
+                        boards[0] = board;
+                        if (i == 0)
+                        {
+                            foreach (var move in moves)
+                            {
+                                nodes++;
+                                Console.WriteLine(move.Notation + ": 1");
+                            }
+                            timer1.Stop();
+                            Console.WriteLine("ply: " + i + " Time " + timer1.ElapsedMilliseconds + " Nodes " + nodes + " knps " + nodes / ((ulong)timer1.ElapsedMilliseconds + 1));
+                            continue;
+                        }
+                        for (int j = 0; j < moves.Length; j++)
+                        {
+                            boards[ply] = Board.DoMove(moves[j], boards[ply - 1]);
+                            Console.Write(moves[j].Notation + ": ");
+                            curNodes = Engine.Perft(boards, i, ply + 1);
+                            Console.WriteLine(curNodes);
+                            nodes += curNodes;
+                        }
+                        timer1.Stop();
+                        Console.WriteLine("ply: " + i + " Time " + timer1.ElapsedMilliseconds + " Nodes " + nodes + " knps " + nodes / ((ulong)timer1.ElapsedMilliseconds + 1));
+                    }
+                }
                 else if (UciIn == "quit")
                 {
                     Environment.Exit(0);

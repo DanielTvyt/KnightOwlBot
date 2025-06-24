@@ -6,10 +6,10 @@
         public bool IsWhite;
         public bool IsSliding;
         public int Material;
-        public char Notation;
+        public byte Notation;
 
         public static Piece CreatePiece(char pieceIn)
-        { 
+        {
             int[] bishop = [-9, -7, 7, 9];
             int[] rook = [-8, -1, 1, 8];
             int[] queen = [-9, -8, -7, -1, 1, 7, 8, 9];
@@ -22,7 +22,7 @@
                         IsWhite = true,
                         Material = 100,
                         IsSliding = false,
-                        Notation = pieceIn,
+                        Notation = 1,
                     };
                     return pawnW;
                 case 'N':
@@ -32,7 +32,7 @@
                         Material = 300,
                         IsSliding = false,
                         MoveDelta = knight,
-                        Notation = pieceIn,
+                        Notation = 2,
                     };
                     return knightW;
                 case 'B':
@@ -42,7 +42,7 @@
                         Material = 300,
                         IsSliding = true,
                         MoveDelta = bishop,
-                        Notation = pieceIn,
+                        Notation = 3,
                     };
                     return bishopW;
                 case 'R':
@@ -52,7 +52,7 @@
                         Material = 500,
                         IsSliding = true,
                         MoveDelta = rook,
-                        Notation = pieceIn,
+                        Notation = 4,
                     };
                     return rookW;
                 case 'Q':
@@ -62,7 +62,7 @@
                         Material = 900,
                         IsSliding = true,
                         MoveDelta = queen,
-                        Notation = pieceIn,
+                        Notation = 5,
                     };
                     return queenW;
                 case 'K':
@@ -72,7 +72,7 @@
                         Material = 0,
                         IsSliding = false,
                         MoveDelta = queen,
-                        Notation = pieceIn,
+                        Notation = 6,
                     };
                     return kingW;
 
@@ -82,7 +82,7 @@
                         IsWhite = false,
                         Material = -100,
                         IsSliding = false,
-                        Notation = pieceIn,
+                        Notation = 7,
                     };
                     return pawnB;
                 case 'n':
@@ -92,7 +92,7 @@
                         Material = -300,
                         IsSliding = false,
                         MoveDelta = knight,
-                        Notation = pieceIn,
+                        Notation = 8,
                     };
                     return knightB;
                 case 'b':
@@ -102,7 +102,7 @@
                         Material = -300,
                         IsSliding = true,
                         MoveDelta = bishop,
-                        Notation = pieceIn,
+                        Notation = 9,
                     };
                     return bishopB;
                 case 'r':
@@ -112,7 +112,7 @@
                         Material = -500,
                         IsSliding = true,
                         MoveDelta = rook,
-                        Notation = pieceIn,
+                        Notation = 10,
                     };
                     return rookB;
                 case 'q':
@@ -122,7 +122,7 @@
                         Material = -900,
                         IsSliding = true,
                         MoveDelta = queen,
-                        Notation = pieceIn,
+                        Notation = 11,
                     };
                     return queenB;
                 case 'k':
@@ -132,12 +132,47 @@
                         Material = 0,
                         IsSliding = false,
                         MoveDelta = queen,
-                        Notation = pieceIn,
+                        Notation = 12,
                     };
                     return kingB;
 
                 default:
                     return null;
+            }
+        }
+
+        public static char byteToChar(byte b)
+        {
+            switch (b)
+            {
+                case 1:
+                    return 'P';
+                case 2:
+                    return 'N';
+                case 3:
+                    return 'B';
+                case 4:
+                    return 'R';
+                case 5:
+                    return 'Q';
+                case 6:
+                    return 'K';
+
+                case 7:
+                    return 'p';
+                case 8:
+                    return 'n';
+                case 9:
+                    return 'b';
+                case 10:
+                    return 'r';
+                case 11:
+                    return 'q';
+                case 12:
+                    return 'k';
+                default:
+                    return ' ';
+
             }
         }
     }

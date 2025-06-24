@@ -30,29 +30,7 @@ namespace KnightOwlBot
             }
             
             Console.ReadLine();
-            for (int i = 1; i <= 7; i++)
-            {
-                var timer1 = System.Diagnostics.Stopwatch.StartNew();
-                ulong nodes = 0;
-                ulong curNodes;
-                timer1.Start();
-                int ply = 1;
-                boards = new Board[i + 1];
-                boards[0] = postion;
-                Move[] moves = Board.GetLegalMoves(boards[ply - 1]);
-                Console.WriteLine(moves.Length);
-                for (int j = 0; j < moves.Length; j++)
-                {
-                    boards[ply] = Board.DoMove(moves[j], boards[ply - 1]);
-                    Console.Write(moves[j].Notation + ": ");
-                    curNodes = Engine.Perft(boards, i, (ply + 1));
-                    Console.WriteLine(curNodes);
-                    nodes += curNodes;
-                }
-                
-                timer1.Stop();
-                Console.WriteLine("ply: " + i + " Time: " + timer1.ElapsedMilliseconds + " Nodes: " + nodes);
-            }
+            
             Move move = new Move();
             move.Notation = "e2e4";
             
