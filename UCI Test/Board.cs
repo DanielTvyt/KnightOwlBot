@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.AccessControl;
 
 namespace KnightOwlBot
 {
@@ -178,6 +176,7 @@ namespace KnightOwlBot
                 {
                     continue;
                 }
+
                 pos1 = Board.IndexToPos(i);
 
                 if (board.board[i].Notation is 1 or 7) //P or p
@@ -288,7 +287,6 @@ namespace KnightOwlBot
                     }
                 }
             }
-            
             return [.. moves];
         }
 

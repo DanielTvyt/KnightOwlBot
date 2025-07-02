@@ -70,6 +70,7 @@
     <Compile Include="Piece.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PST.cs" />
     <Compile Include="Uci.cs" />
   </ItemGroup>
   <ItemGroup>

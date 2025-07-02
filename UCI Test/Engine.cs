@@ -9,55 +9,7 @@ namespace KnightOwlBot
         private static uint nodes = 0;
         private static uint maxDepth;
         private static long maxTime;
-        private static Stopwatch watch = new Stopwatch();
-        private static readonly int[] pawnPST = {  0,   0,   0,   0,   0,   0,   0,   0,
-                                                  30,  30,  30,  40,  40,  30,  30,  30,
-                                                  20,  20,  20,  30,  30,  30,  20,  20,
-                                                  10,  10,  15,  25,  25,  15,  10,  10,
-                                                   5,   5,   5,  20,  20,   5,   5,   5,
-                                                   5,   0,   0,   5,   5,   0,   0,   5,
-                                                   5,   5,   5, -10, -10,   5,   5,   5,
-                                                   0,   0,   0,   0,   0,   0,   0,   0};
-        private static readonly int[] knightPST = { -5,  -5, -5, -5, -5, -5,  -5, -5,
-                                           -5,   0,  0, 10, 10,  0,   0, -5,
-                                           -5,   5, 10, 10, 10, 10,   5, -5,
-                                           -5,   5, 10, 15, 15, 10,   5, -5,
-                                           -5,   5, 10, 15, 15, 10,   5, -5,
-                                           -5,   5, 10, 10, 10, 10,   5, -5,
-                                           -5,   0,  0,  5,  5,  0,   0, -5,
-                                           -5, -10, -5, -5, -5, -5, -10, -5};
-        private static readonly int[] bishopPST = { 0,   0,   0,   0,   0,   0,   0,   0,
-                                           0,   0,   0,   0,   0,   0,   0,   0,
-                                           0,   0,   0,   0,   0,   0,   0,   0,
-                                           0,  10,   0,   0,   0,   0,  10,   0,
-                                           5,   0,  10,   0,   0,  10,   0,   5,
-                                           0,  10,   0,  10,  10,   0,  10,   0,
-                                           0,  10,   0,  10,  10,   0,  10,   0,
-                                           0,   0, -10,   0,   0, -10,   0,   0};
-        private static readonly int[] rookPST = { 10,  10,  10,  10,  10,  10,  10,  10,
-                                         10,  10,  10,  10,  10,  10,  10,  10,
-                                          0,   0,   0,   0,   0,   0,   0,   0,
-                                          0,   0,   0,   0,   0,   0,   0,   0,
-                                          0,   0,   0,   0,   0,   0,   0,   0,
-                                          0,   0,   0,   0,   0,   0,   0,   0,
-                                          0,   0,   0,  10,  10,   0,   0,   0,
-                                          0,   0,   0,  10,  10,   5,   0,   0};
-        private static readonly int[] queenPST = { -20, -10, -10, -5, -5, -10, -10, -20,
-                                          -10,   0,   0,  0,  0,   0,   0, -10,
-                                          -10,   0,   5,  5,  5,   5,   0, -10,
-                                           -5,   0,   5,  5,  5,   5,   0,  -5,
-                                           -5,   0,   5,  5,  5,   5,   0,  -5,
-                                          -10,   5,   5,  5,  5,   5,   0, -10,
-                                          -10,   0,   5,  0,  0,   0,   0, -10,
-                                          -20, -10, -10,  0,  0, -10, -10, -20};
-        private static readonly int[] kingPST = { 0, 0,  0,  0,   0,  0,  0, 0,
-                                         0, 0,  0,  0,   0,  0,  0, 0,
-                                         0, 0,  0,  0,   0,  0,  0, 0,
-                                         0, 0,  0,  0,   0,  0,  0, 0,
-                                         0, 0,  0,  0,   0,  0,  0, 0,
-                                         0, 0,  0,  0,   0,  0,  0, 0,
-                                         0, 0,  0, -5,  -5, -5,  0, 0,
-                                         0, 0, 10, -5,  -5, -5, 10, 0};
+        private static Stopwatch watch = new();
 
         public static ulong Perft(Board[] boards, int depth, int ply)
         {
@@ -141,6 +93,7 @@ namespace KnightOwlBot
             {
                 return (board[ply - 1].IsWhiteToMove ? Convert.ToInt32(-10000 * depth) : Convert.ToInt32(10000 * depth), pv);
             }
+
             string bestMove = null;
             List<string> bestPv = [];
             moves = SortMoves(moves);
@@ -188,7 +141,6 @@ namespace KnightOwlBot
             return (bestScore, bestPv);
         }
 
-
         private static int Eval(Board board)
         {
             nodes++;
@@ -206,41 +158,41 @@ namespace KnightOwlBot
                 switch (piece.Notation)
                 {
                     case 1:
-                        Material += pawnPST[i];
+                        Material += PST.pawn[i];
                         break;
                     case 2:
-                        Material += knightPST[i];
+                        Material += PST.knight[i];
                         break;
                     case 3:
-                        Material += bishopPST[i];
+                        Material += PST.bishop[i];
                         break;
                     case 4:
-                        Material += rookPST[i];
+                        Material += PST.rook[i];
                         break;
                     case 5:
-                        Material += queenPST[i];
+                        Material += PST.queen[i];
                         break;
                     case 6:
-                        Material += kingPST[i];
+                        Material += PST.king[i];
                         break;
 
                     case 7:
-                        Material -= pawnPST[63 - i];
+                        Material -= PST.pawn[63 - i];
                         break;
                     case 8:
-                        Material -= knightPST[63 - i];
+                        Material -= PST.knight[63 - i];
                         break;
                     case 9:
-                        Material -= bishopPST[63 - i];
+                        Material -= PST.bishop[63 - i];
                         break;
                     case 10:
-                        Material -= rookPST[63 - i];
+                        Material -= PST.rook[63 - i];
                         break;
                     case 11:
-                        Material -= queenPST[63 - i];
+                        Material -= PST.queen[63 - i];
                         break;
                     case 12:
-                        Material -= kingPST[63 - i];
+                        Material -= PST.king[63 - i];
                         break;
                 }
                 Material += piece.Material;
