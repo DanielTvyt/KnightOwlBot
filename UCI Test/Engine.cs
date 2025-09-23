@@ -67,7 +67,7 @@ namespace KnightOwlBot
                 pv.Reverse();
                 pvString = string.Join(" ", pv);
 
-                Console.WriteLine("info depth " + depth + " time " + takenTime + " nodes " + nodes + " pv " + pvString + " score cp " + score + " nps " + Convert.ToUInt32(nodes / (decimal) takenTime * 1000));
+                Console.WriteLine("info depth " + depth + " score cp " + score + " nodes " + nodes + " nps " + Convert.ToUInt32(nodes / (decimal)takenTime * 1000) + " time " + takenTime + " pv " + pvString);
             }
             watch = new Stopwatch();
             return pv[0];

@@ -110,8 +110,8 @@ namespace KnightOwlBot
                     board = Uci.GetPos(position);
                     try
                     {
-                        depth = Convert.ToInt32(UciIn[6].ToString());
-                        Console.WriteLine(depth);
+                        depth = Convert.ToInt32(UciIn[6].ToString()) - 1;
+                        Console.WriteLine(depth + 1);
                     }
                     catch
                     {
@@ -136,7 +136,7 @@ namespace KnightOwlBot
                                 Console.WriteLine(move.Notation + ": 1");
                             }
                             timer1.Stop();
-                            Console.WriteLine("ply: " + i + " Time " + timer1.ElapsedMilliseconds + " Nodes " + nodes + " knps " + nodes / ((ulong)timer1.ElapsedMilliseconds + 1));
+                            Console.WriteLine("ply: " + (i + 1) + " Time " + timer1.ElapsedMilliseconds + " Nodes " + nodes + " knps " + nodes / ((ulong)timer1.ElapsedMilliseconds + 1));
                             continue;
                         }
                         for (int j = 0; j < moves.Length; j++)
@@ -148,7 +148,7 @@ namespace KnightOwlBot
                             nodes += curNodes;
                         }
                         timer1.Stop();
-                        Console.WriteLine("ply: " + i + " Time " + timer1.ElapsedMilliseconds + " Nodes " + nodes + " knps " + nodes / ((ulong)timer1.ElapsedMilliseconds + 1));
+                        Console.WriteLine("ply: " + (i + 1) + " Time " + timer1.ElapsedMilliseconds + " Nodes " + nodes + " knps " + nodes / ((ulong)timer1.ElapsedMilliseconds + 1));
                     }
                 }
                 else if (UciIn == "quit")
@@ -182,7 +182,9 @@ namespace KnightOwlBot
                     {
                         Move move = new()
                         {
-                            Notation = moves[i]
+                            Notation = moves[i],
+                            Index1 = (moves[i][0] - 'a') + (8 - (moves[i][1] - '0')) * 8,
+                            Index2 = (moves[i][2] - 'a') + (8 - (moves[i][3] - '0')) * 8
                         };
                         if (move.Notation.Length == 5)
                         {

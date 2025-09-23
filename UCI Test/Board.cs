@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace KnightOwlBot
@@ -10,6 +11,12 @@ namespace KnightOwlBot
         public List<int> ThreeFold { get; set; }
         public bool IsWhiteToMove { get; set; }
         public int EnPassentIndex {  get; set; }
+        public bool IsInCheck { get; set; }
+        public bool DoubleCheck { get; set; }
+        public int IndexOfCheckingPiece { get; set; }
+        public UInt64 BiboardAttacked { get; set; }
+        public UInt64 BiboardCheck { get; set; }
+        public List<UInt64> BiboardPinned {  get; set; }
 
         private Board Clone()
         {
@@ -18,7 +25,12 @@ namespace KnightOwlBot
                 board = (Piece[])this.board.Clone(),
                 ThreeFold = [.. this.ThreeFold],
                 IsWhiteToMove = this.IsWhiteToMove,
-                EnPassentIndex = this.EnPassentIndex
+                EnPassentIndex = this.EnPassentIndex,
+                IsInCheck = this.IsInCheck,
+                DoubleCheck = this.DoubleCheck,
+                BiboardAttacked = this.BiboardAttacked,
+                BiboardCheck = this.BiboardCheck,
+                BiboardPinned = [.. this.BiboardPinned]
             };
         }
 
@@ -27,7 +39,8 @@ namespace KnightOwlBot
             Board boardOut = new()
             {
                 board = new Piece[64],
-                ThreeFold = []
+                ThreeFold = [],
+                BiboardPinned = []
             };
             int y = 0;
 
@@ -67,181 +80,60 @@ namespace KnightOwlBot
             return boardOut;
         }
 
-        private static Move[] GetCaptures(Board board) //No Enpassant -> cant capture King
+        private static UInt64 GetBiboard(Board board)
         {
-            List<Move> moves = [];
+            board.IsWhiteToMove = !board.IsWhiteToMove;
+
+            board.BiboardAttacked = 0;
+            board.BiboardPinned = [];
+            board.BiboardCheck = 0;
+            board.IsInCheck = false;
+            board.DoubleCheck = false;
+
             int moveDelta;
             int lastJ;
-            byte lastCap;
-            string pos1;
-            string pos2;
-            int index = 0;
 
             int cap1 = board.IsWhiteToMove ? -9 : 7;
             int cap2 = board.IsWhiteToMove ? -7 : 9;
 
             for (int i = 0; i < 64; i++)
             {
-                index++;
 
                 if (board.board[i] == null || board.board[i].IsWhite != board.IsWhiteToMove)
                 {
                     continue;
                 }
-                pos1 = Board.IndexToPos(i);
-
-                if (board.board[i].Notation is 1 or 7) //p or P
-                {
-                    if (i % 8 != 0 && (board.board[i + cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove)) //capture
-                    {
-                        lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : (byte)0;
-                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap1), true, lastCap, 0));
-                    }
-
-                    if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove))
-                    {
-                        lastCap = board.board[i + cap2] != null ? board.board[i + cap2].Notation : (byte)0;
-                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap2), true, lastCap, 0));
-                    }
-
-                    continue;
-                }
-
-                for (int k = 0; k < board.board[i].MoveDelta.Length; k++)
-                {
-                    lastJ = i;
-                    moveDelta = board.board[i].MoveDelta[k];
-                    for (int j = i + moveDelta; j < 64 && j >= 0; j += moveDelta)
-                    {
-                        if (j % 8 == 0 && lastJ % 8 == 7 || j % 8 == 7 && lastJ % 8 == 0)
-                        {
-                            break;
-                        }
-
-                        if (board.board[i].Notation is 2 or 8 && i % 8 < 2 && (moveDelta == -10 || moveDelta == 6) || i % 8 > 5 && (moveDelta == 10 || moveDelta == -6)) //N or n
-                        {
-                            break;
-                        }
-
-                        pos2 = Board.IndexToPos(j);
-
-                        if (board.board[j] != null && board.board[j].IsWhite == board.IsWhiteToMove)
-                        {
-                            break;
-                        }
-                        else if (board.board[j] != null)
-                        {
-                            lastCap = board.board[j].Notation;
-                            moves.Add(moveHelper(pos1, pos2, true, lastCap, 0));
-
-                            break;
-                        }
-
-                        if (!board.board[i].IsSliding)
-                        {
-                            break;
-                        }
-                        lastJ = j;
-                    }
-                }
-            }
-
-            return [.. moves];
-        }
-
-        private static Move[] GetPseudoLegalMoves(Board board)
-        {
-            List<Move> moves = [];
-            Move move;
-            int moveDelta;
-            int lastJ;
-            byte lastCap;
-            string pos1;
-            string pos2;
-            int index = 0;
-
-            string promPieces = board.IsWhiteToMove ? "QRBN" : "qrbn";
-            int fw = board.IsWhiteToMove ? -8 : 8;
-            int fw2 = board.IsWhiteToMove ? -16 : 16;
-            int cap1 = board.IsWhiteToMove ? -9 : 7;
-            int cap2 = board.IsWhiteToMove ? -7 : 9;
-            int start = board.IsWhiteToMove ? 6 : 1; // start row
-            int prom = board.IsWhiteToMove ? 0 : 7;
-
-            for (int i = 0; i < 64; i++)
-            {
-                index++;
-
-                if (board.board[i] == null || board.board[i].IsWhite != board.IsWhiteToMove)
-                {
-                    continue;
-                }
-
-                pos1 = Board.IndexToPos(i);
 
                 if (board.board[i].Notation is 1 or 7) //P or p
                 {
-                    if ((i + fw) / 8 == prom) //Promotion
+                    if (i % 8 != 0) //capture
                     {
-                        if (board.board[i + fw] == null)
+                        board.BiboardAttacked |= 1UL << (i + cap1);
+                        if (board.board[i + cap1] != null && board.board[i + cap1].Notation is 6 or 12 && board.board[i + cap1].IsWhite != board.IsWhiteToMove) //Cant pin the king
                         {
-                           for (int j = 0; j < 4; j++)
-                           {
-                               move = moveHelper(pos1, Board.IndexToPos(i + fw) + char.ToLower(promPieces[j]), false, (byte)0, 9);
-                               move.PromPiece = promPieces[j];
-                               moves.Add(move);
-                           }
-                        }
-
-                        if (i % 8 != 0 && (board.board[i + cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove)) //capture
-                        {
-                            lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : (byte)0;
-                            for (int j = 0; j < 4; j++)
+                            if (board.IsInCheck) //double check
                             {
-                                move = moveHelper(pos1, Board.IndexToPos(i + cap1) + char.ToLower(promPieces[j]), true, lastCap, 10);
-                                move.PromPiece = promPieces[j];
-                                moves.Add(move);
+                                board.DoubleCheck = true;
+                                board.IndexOfCheckingPiece = -1;
                             }
-
+                            board.IndexOfCheckingPiece = i;
+                            board.IsInCheck = true;
                         }
-
-                        if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove))
+                    }
+                    if (i % 8 != 7)
+                    {
+                        board.BiboardAttacked |= 1UL << (i + cap2);
+                        if (board.board[i + cap2] != null && board.board[i + cap2].Notation is 6 or 12 && board.board[i + cap2].IsWhite != board.IsWhiteToMove) //Cant pin the king
                         {
-                            lastCap = board.board[i + cap2] != null ? board.board[i + cap2].Notation : (byte)0;
-                            for (int j = 0; j < 4; j++)
+                            if (board.IsInCheck) //double check
                             {
-                                move = moveHelper(pos1, Board.IndexToPos(i + cap2) + char.ToLower(promPieces[j]), true, lastCap, 10);
-                                move.PromPiece = promPieces[j];
-                                moves.Add(move);
+                                board.DoubleCheck = true;
+                                board.IndexOfCheckingPiece = -1;
                             }
-                        }
-                        continue;
-                    }
-                    else if (board.board[i + fw] == null) //move one forward
-                    {
-                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + fw), false, (byte)0, 1));
-
-                        if (i / 8 == start && board.board[i + fw2] == null) 
-                        {
-                            move = moveHelper(pos1, Board.IndexToPos(i + fw2), false, (byte)0, 1);
-                            move.EnPassentIndex = i + fw;
-                            moves.Add(move);
+                            board.IndexOfCheckingPiece = i;
+                            board.IsInCheck = true;
                         }
                     }
-
-                    if (i % 8 != 0 && (board.board[i+cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove || (i + cap1 == board.EnPassentIndex && i / 8 != start))) //capture
-                    {
-                        lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : (byte)0;
-                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap1), true, lastCap, 6));
-                    }
-
-                    if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove || (i + cap2 == board.EnPassentIndex && i / 8 != start)))
-                    {
-                        lastCap = board.board[i + cap2] != null ? board.board[i + cap2].Notation : (byte)0;
-                        moves.Add(moveHelper(pos1, Board.IndexToPos(i + cap2), true, lastCap, 6));
-                    }
-
-
                     continue;
                 }
 
@@ -261,11 +153,224 @@ namespace KnightOwlBot
                             break;
                         }
 
-                        pos2 = Board.IndexToPos(j);
+                        if (board.board[j] == null)
+                        {
+                            board.BiboardAttacked |= 1UL << j;
+                            lastJ = j;
+                        }
+                        else if (board.board[j].IsWhite == board.IsWhiteToMove) //same color piece
+                        {
+                            board.BiboardAttacked |= 1UL << j;
+                            break;
+                        }
+                        else if (!board.board[i].IsSliding && board.board[j].IsWhite != board.IsWhiteToMove)
+                        {
+                            board.BiboardAttacked |= 1UL << j;
+                            if (board.board[j].Notation is 6 or 12 && board.board[j].IsWhite != board.IsWhiteToMove) //Knight check
+                            {
+                                if (board.IsInCheck) //double check
+                                {
+                                    board.DoubleCheck = true;
+                                    board.IndexOfCheckingPiece = -1;
+                                }
+                                else
+                                {
+                                    board.IndexOfCheckingPiece = i;
+                                    board.IsInCheck = true;
+                                }
+                            }
+                            break;
+                        }
+
+                        if (!board.board[i].IsSliding)
+                        {
+                            break;
+                        }
+
+                        if (board.board[j] != null)//opponent piece (can be pinned)
+                        {
+                            board.BiboardAttacked |= 1UL << j;
+                            if (board.board[j].Notation is 6 or 12 && board.board[j].IsWhite != board.IsWhiteToMove) //Cant pin the king
+                            {
+                                if (board.IsInCheck) //double check
+                                {
+                                    board.DoubleCheck = true;
+                                    board.IndexOfCheckingPiece = -1;
+                                }
+                                else
+                                {
+                                    board.IndexOfCheckingPiece = i;
+                                    board.IsInCheck = true;
+                                    isPinned(board, i, lastJ, i, moveDelta, true);
+                                }
+                                lastJ = j;
+                                continue;
+                            }
+
+                            isPinned(board, i, lastJ, i, moveDelta, false);
+                            break;
+                        }
+                    }
+                }
+            }
+            board.IsWhiteToMove = !board.IsWhiteToMove;
+            return board.BiboardAttacked;
+        }
+
+        private static void isPinned(Board board, int posPinningPiece, int lastJ, int i, int moveDelta, bool isInCheck)
+        {
+            UInt64 pinMask = 0;
+            bool encounteredFirstPiece = false;
+
+            if (!isInCheck)
+            {
+                pinMask |= 1UL << posPinningPiece; //Pinned piece can take pinning piece
+            }
+
+            for (int j = i + moveDelta; j < 64 && j >= 0; j += moveDelta)
+            {
+                if (j % 8 == 0 && lastJ % 8 == 7 || j % 8 == 7 && lastJ % 8 == 0)
+                {
+                    break;
+                }
+                if (isInCheck)
+                {
+                    if (board.board[j] != null && board.board[j].IsWhite != board.IsWhiteToMove && board.board[j].Notation is 6 or 12)
+                    {
+                        return;
+                    }
+                    board.BiboardCheck |= 1UL << j;
+                    continue;
+                }
+
+                if (board.board[j] == null)
+                {
+                    pinMask |= 1UL << j;
+                    lastJ = j;
+                    continue;
+                }
+                if (board.board[j].IsWhite != board.IsWhiteToMove && board.board[j].Notation is 6 or 12)
+                {
+                    board.BiboardPinned.Add(pinMask);
+                    break;
+                }
+                if (!encounteredFirstPiece) //only one piece between attacker and king
+                {
+                    pinMask |= 1UL << j;
+                    lastJ = j;
+                    encounteredFirstPiece = true;
+                    continue;
+                }
+                return;
+            }
+            return;
+        }
+
+        private static Move[] GetPseudoLegalMoves(Board board) 
+        {
+            List<Move> moves = [];
+            Move move;
+            int moveDelta;
+            int lastJ;
+            byte lastCap;
+            int index = 0;
+
+            string promPieces = board.IsWhiteToMove ? "QRBN" : "qrbn";
+            int fw = board.IsWhiteToMove ? -8 : 8;
+            int fw2 = board.IsWhiteToMove ? -16 : 16; //=fw*2
+            int cap1 = board.IsWhiteToMove ? -9 : 7;
+            int cap2 = board.IsWhiteToMove ? -7 : 9;
+            int start = board.IsWhiteToMove ? 6 : 1; // start row
+            int prom = board.IsWhiteToMove ? 0 : 7;
+            for (int i = 0; i < 64; i++)
+            {
+                index++;
+
+                if (board.board[i] == null || board.board[i].IsWhite != board.IsWhiteToMove)
+                {
+                    continue;
+                }
+
+                if (board.board[i].Notation is 1 or 7) //P or p
+                {
+                    if ((i + fw) / 8 == prom) //Promotion
+                    {
+                        if (board.board[i + fw] == null)
+                        {
+                           for (int j = 0; j < 4; j++)
+                           {
+                               move = moveHelper(i, i + fw, false, (byte)0, 9, promPieces[j]);
+                               moves.Add(move);
+                           }
+                        }
+
+                        if (i % 8 != 0 && (board.board[i + cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove)) //capture
+                        {
+                            lastCap = board.board[i + cap1].Notation;
+                            for (int j = 0; j < 4; j++)
+                            {
+                                move = moveHelper(i, i + cap1, true, lastCap, 10, promPieces[j]);
+                                moves.Add(move);
+                            }
+
+                        }
+
+                        if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove))
+                        {
+                            lastCap = board.board[i + cap2].Notation;
+                            for (int j = 0; j < 4; j++)
+                            {
+                                move = moveHelper(i, i + cap2, true, lastCap, 10, promPieces[j]);
+                                moves.Add(move);
+                            }
+                        }
+                        continue;
+                    }
+                    else if (board.board[i + fw] == null) //move one forward
+                    {
+                        moves.Add(moveHelper(i, i + fw, false, (byte)0, 1, '\0'));
+
+                        if (i / 8 == start && board.board[i + fw2] == null) 
+                        {
+                            move = moveHelper(i, i + fw2, false, (byte)0, 1, '\0');
+                            move.EnPassentIndex = i + fw;
+                            moves.Add(move);
+                        }
+                    }
+
+                    if (i % 8 != 0 && (board.board[i+cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove || (i + cap1 == board.EnPassentIndex && i / 8 != start))) //capture
+                    {
+                        lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : (byte)0;
+                        moves.Add(moveHelper(i, i + cap1, true, lastCap, 6, '\0'));
+                    }
+
+                    if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove || (i + cap2 == board.EnPassentIndex && i / 8 != start)))
+                    {
+                        lastCap = board.board[i + cap2] != null ? board.board[i + cap2].Notation : (byte)0;
+                        moves.Add(moveHelper(i, i + cap2, true, lastCap, 6, '\0'));
+                    }
+                    continue;
+                }
+
+                for (int k = 0; k < board.board[i].MoveDelta.Length; k++)
+                {
+                    lastJ = i;
+                    moveDelta = board.board[i].MoveDelta[k];
+                    for (int j = i + moveDelta; j < 64 && j >= 0; j += moveDelta)
+                    {
+                        if (j % 8 == 0 && lastJ % 8 == 7 || j % 8 == 7 && lastJ % 8 == 0)
+                        {
+                            break;
+                        }
+
+                        if (board.board[i].Notation is 2 or 8 && i % 8 < 2 && (moveDelta == -10 || moveDelta == 6) || i % 8 > 5 && (moveDelta == 10 || moveDelta == -6))
+                        {
+                            break;
+                        }
 
                         if (board.board[j] == null)
                         {
-                            moves.Add(moveHelper(pos1, pos2, false, (byte)0, 1));
+                            moves.Add(moveHelper(i, j, false, (byte)0, 1, '\0'));
                         }
                         else if (board.board[j].IsWhite == board.IsWhiteToMove)
                         {
@@ -274,8 +379,7 @@ namespace KnightOwlBot
                         else
                         {
                             lastCap = board.board[j].Notation;
-                            moves.Add(moveHelper(pos1, pos2, true, lastCap, 5));
-
+                            moves.Add(moveHelper(i, j, true, lastCap, 5, '\0'));
                             break;
                         }
 
@@ -286,20 +390,81 @@ namespace KnightOwlBot
                         lastJ = j;
                     }
                 }
-            }
+            };
             return [.. moves];
         }
 
-        public static Move[] GetLegalMoves(Board board)
+        public static Move[] GetLegalMoves(Board curBoard)
         {
-            Move[] moves = Board.GetPseudoLegalMoves(board);
+            Move[] moves = GetPseudoLegalMoves(curBoard);
             List<Move> legalMoves = [];
+            UInt64 kingMask = 0;
+            UInt64 biboard = Board.GetBiboard(curBoard);
+            //PrintBitboard(biboard);
             foreach (Move m in moves)
             {
-                if (Board.isLegal(board, m))
+                if (curBoard.DoubleCheck && curBoard.board[m.Index1].Notation is not 6 and not 12) //only king moves allowed
+                {
+                    continue;
+                }
+
+
+                foreach (var u in curBoard.BiboardPinned)
+                {
+                    //PrintBitboard(u);
+                    if ((1UL << m.Index1 & u) != 0 && (1UL << m.Index2 & u) == 0) //pinned piece moved outside pin line
+                    {
+                        goto endLoop;
+                    }
+                }
+
+                if (curBoard.IsInCheck) //take checking piece or block check
+                {
+                    if ((m.Index2 == curBoard.IndexOfCheckingPiece || (curBoard.BiboardCheck & 1UL << m.Index2) != 0) && (curBoard.board[m.Index1].Notation is not 6 and not 12))
+                    {
+                        legalMoves.Add(m);
+                        continue;
+                    }
+                }
+
+                Board newBoard = DoMove(m, curBoard);
+
+                for (int i = 0; i < 64; i++) //TODO: optimize
+                {
+                    if (newBoard.board[i] != null && newBoard.board[i].Notation is 6 or 12 && newBoard.board[i].IsWhite != newBoard.IsWhiteToMove) //K or k
+                    {
+                        kingMask = 1UL << i;
+                        break;
+                    }
+                }
+                if (m.IsCapture && m.LastCapture == 0) //en passent capture
+                {
+                    //chek if captured pawn was pinned
+                    int indexOfCapturedPawn = newBoard.IsWhiteToMove ? m.Index2 + 8 : m.Index2 - 8;
+                    foreach (var u in curBoard.BiboardPinned)
+                    {
+                        if ((1UL << indexOfCapturedPawn & u) != 0)
+                        {
+                            break;
+                        }
+                    }
+                    //check if king is check after en passent capture
+                    newBoard.IsWhiteToMove = !newBoard.IsWhiteToMove;
+                    UInt64 bitboardEp = Board.GetBiboard(newBoard);
+                    newBoard.IsWhiteToMove = !newBoard.IsWhiteToMove;
+
+                    if ((kingMask & bitboardEp) == 0)
+                    {
+                        legalMoves.Add(m);
+                    }
+                    continue;
+                }
+                if ((kingMask & biboard) == 0)
                 {
                     legalMoves.Add(m);
                 }
+
+            endLoop:;
             }
             return [.. legalMoves];
         }
@@ -307,8 +472,8 @@ namespace KnightOwlBot
         public static Board DoMove(Move move, Board board)
         {
             Board newBoard = board.Clone();
-            int index1 = move.Notation[0] - 96 + 64 - 8 * Convert.ToInt32(new string(move.Notation[1], 1)) - 1; //index of lower case letter in alphabet (a = 1, b = 2, ...)
-            int index2 = move.Notation[2] - 96 + 64 - 8 * Convert.ToInt32(new string(move.Notation[3], 1)) - 1;
+            int index1 = move.Index1;
+            int index2 = move.Index2;
 
             newBoard.board[index2] = newBoard.board[index1];
             newBoard.board[index1] = null;
@@ -377,36 +542,24 @@ namespace KnightOwlBot
             return newBoard;
         }
 
-        private static Move moveHelper(string pos1, string pos2, bool isCapture, byte lastCapture, byte moveValue)
+        private static Move moveHelper(int index1, int index2, bool isCapture, byte lastCapture, byte moveValue, char promPiece)
         {
             Move move = new()
             {
-                Notation = pos1 + pos2,
+                Notation = IndexToPos(index1) + IndexToPos(index2),
+                Index1 = index1,
+                Index2 = index2,
                 IsCapture = isCapture,
                 LastCapture = lastCapture,
                 MoveValue = moveValue
             };
+            if (promPiece != '\0')
+            {
+                move.Notation += char.ToLower(promPiece);
+                move.PromPiece = promPiece;
+            }
 
             return move;
-        }
-
-        private static bool isLegal(Board board, Move move)
-        {
-            Board[] boards = new Board[3];
-            boards[0] = board.Clone();
-            boards[1] = DoMove(move, boards[0]);
-            Move[] moves = GetCaptures(boards[1]);
-            byte king = board.IsWhiteToMove ? (byte)6 : (byte)12; //K or k
-
-            foreach (Move LegalMove in moves)
-            {
-                boards[2] = Board.DoMove(LegalMove, boards[1]);
-                if (!boards[2].board.Any(Piece => Piece != null && Piece.Notation == king))
-                {
-                    return false;
-                }
-            }
-            return true;
         }
 
         private static string IndexToPos(int index)
@@ -426,12 +579,30 @@ namespace KnightOwlBot
                 if (board.board[i] == null)
                 {
                     Console.Write("- ");
+                    continue;
                 }
-                else
+                Console.Write(Piece.byteToChar(board.board[i].Notation) + " ");
+            }
+            Console.WriteLine(" \n");
+        }
+        public static void PrintBitboard(UInt64 bitboard)
+        {
+            for (int i = 0; i < 64; i++)
+            {
+                if (i % 8 == 0)
                 {
-                    Console.Write(board.board[i].Notation + " ");
+                    Console.WriteLine(" ");
                 }
-                
+
+                UInt64 x = 1UL << i;
+                x &= bitboard;
+
+                if (x == 0)
+                {
+                    Console.Write("- ");
+                    continue;
+                }
+                Console.Write("# ");
             }
             Console.WriteLine(" \n");
         }
