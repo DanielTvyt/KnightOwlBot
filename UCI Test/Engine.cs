@@ -39,11 +39,11 @@ namespace KnightOwlBot
             watch.Start();
             List<string> pv = [];
             nodes = 0;
+            List<Board> boards = new();
+            boards.Add(board);
             for (uint depth = 1; watch.ElapsedMilliseconds < searchTime || depth <= 1; depth++)
             {
-                Board[] boards = new Board[depth + 1];
-                boards[0] = board;
-                uint ply = 0;
+                int ply = 0;
                 maxDepth = depth;
                 int score;
                 int alpha = int.MinValue;
@@ -67,13 +67,13 @@ namespace KnightOwlBot
                 pv.Reverse();
                 pvString = string.Join(" ", pv);
 
-                Console.WriteLine("info depth " + depth + " score cp " + score + " nodes " + nodes + " nps " + Convert.ToUInt32(nodes / (decimal)takenTime * 1000) + " time " + takenTime + " pv " + pvString);
+                Console.WriteLine("info depth " + depth + " seldepth " + pv.Count + " score cp " + score + " nodes " + nodes + " nps " + Convert.ToUInt32(nodes / (decimal)takenTime * 1000) + " time " + takenTime + " pv " + pvString);
             }
             watch = new Stopwatch();
             return pv[0];
         }
 
-        private static (int, List<string>) Search(Board[] board, uint depth, uint ply, int alpha, int beta)
+        private static (int, List<string>) Search(List<Board> board, uint depth, int ply, int alpha, int beta)
         {
             List<string> pv = [];
 
@@ -104,11 +104,23 @@ namespace KnightOwlBot
             int score;
             int bestScore = board[ply - 1].IsWhiteToMove ? int.MinValue : int.MaxValue;
 
+            if (board.Count <= ply)
+            {
+                board.Add(null);
+            }
+
             foreach (Move move in moves)
             {
                 board[ply] = Board.DoMove(move, board[ply - 1]);
 
-                (score, pv) = Search(board, depth - 1, ply + 1, alpha, beta);
+                if (move.IsCapture && depth == 1) //quiescence search
+                {
+                    (score, pv) = Search(board, depth, ply + 1, alpha, beta);
+                }
+                else
+                {
+                    (score, pv) = Search(board, depth - 1, ply + 1, alpha, beta);
+                }
 
                 if (board[ply - 1].IsWhiteToMove)
                 {
