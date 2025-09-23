@@ -91,7 +91,11 @@ namespace KnightOwlBot
 
             if (moves.Length == 0)
             {
-                return (board[ply - 1].IsWhiteToMove ? Convert.ToInt32(-10000 * depth) : Convert.ToInt32(10000 * depth), pv);
+                if (board[ply - 1].IsInCheck)
+                {
+                    return (board[ply - 1].IsWhiteToMove ? Convert.ToInt32(-10000 * depth) : Convert.ToInt32(10000 * depth), pv);
+                }
+                return (0, pv);
             }
 
             string bestMove = null;
