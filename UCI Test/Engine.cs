@@ -119,7 +119,7 @@ namespace KnightOwlBot
 
                 if (move.IsCapture && depth == 1) //quiescence search
                 {
-                    (score, pv) = Search(board, depth, ply + 1, -beta, -alpha);
+                    (score, pv) = QuiescenceSearch(board, ply + 1, -beta, -alpha);
                     score *= -1;
                 }
                 else
@@ -141,6 +141,47 @@ namespace KnightOwlBot
             }
             bestPv.Add(bestMove);
             return (alpha, bestPv);
+        }
+
+        private static (int, List<string>) QuiescenceSearch(List<Board> board, int ply, int alpha, int beta)
+        {
+            List<string> pv = [];
+            int standPat = Eval(board[ply - 1]);
+
+            if (standPat >= beta)
+            {
+                return (beta, pv);
+            }
+            if (standPat > alpha)
+            {
+                alpha = standPat;
+            }
+            Move[] moves = Board.GetLegalMoves(board[ply - 1]);
+            moves = Array.FindAll(moves, m => m.IsCapture);
+            moves = SortMoves(moves);
+            int score;
+            string bestMove = null;
+            if (board.Count <= ply)
+            {
+                board.Add(null);
+            }
+            foreach (Move move in moves)
+            {
+                board[ply] = Board.DoMove(move, board[ply - 1]);
+                (score, pv) = QuiescenceSearch(board, ply + 1, -beta, -alpha);
+                score *= -1;
+                if (score >= beta)
+                {
+                    return (score, pv);
+                }
+                if (score > alpha)
+                {
+                    alpha = score;
+                    bestMove = move.Notation;
+                }
+            }
+            pv.Add(bestMove);
+            return (alpha, pv);
         }
 
         private static int Eval(Board board)
