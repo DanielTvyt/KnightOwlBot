@@ -37,17 +37,16 @@ namespace KnightOwlBot
             uint searchTime = (time + inc) / 100;
             maxTime = (time + inc) / 10;
             watch.Start();
-            List<string> pv = [];
             nodes = 0;
-            List<Board> boards = new();
-            boards.Add(board);
+            int score;
+            List<string> pv = [];
+            List<Board> boards = [board];
             for (uint depth = 1; watch.ElapsedMilliseconds < searchTime || depth <= 1; depth++)
             {
                 int ply = 0;
                 maxDepth = depth;
-                int score;
-                int alpha = int.MinValue;
-                int beta = int.MaxValue;
+                int alpha = -10000000;
+                int beta  =  10000000;
                 try
                 {
                     (score, pv) = Search(boards, depth, ply + 1, alpha, beta);
@@ -57,17 +56,23 @@ namespace KnightOwlBot
                     continue;
                 }
 
-                if (!board.IsWhiteToMove)
-                {
-                    score *= -1;
-                }
-
                 long takenTime = watch.ElapsedMilliseconds == 0 ? 1 : watch.ElapsedMilliseconds;
-
                 pv.Reverse();
                 pvString = string.Join(" ", pv);
+                int selDepth = pv.Count;
+                string bestScore;
 
-                Console.WriteLine("info depth " + depth + " seldepth " + pv.Count + " score cp " + score + " nodes " + nodes + " nps " + Convert.ToUInt32(nodes / (decimal)takenTime * 1000) + " time " + takenTime + " pv " + pvString);
+                if (Math.Abs(score) > 10000) //checkmate
+                {
+                    string perspective = score > 0 ? "" : "-";
+                    bestScore = "mate " + perspective + (100000 - Math.Abs(score)) / 2;
+                }
+                else
+                {
+                    bestScore = "cp " + score.ToString();
+                }
+
+                Console.WriteLine("info depth " + depth + " seldepth " + selDepth + " score " + bestScore + " nodes " + nodes + " nps " + Convert.ToUInt32(nodes / (decimal)takenTime * 1000) + " time " + takenTime + " pv " + pvString);
             }
             watch = new Stopwatch();
             return pv[0];
@@ -93,7 +98,7 @@ namespace KnightOwlBot
             {
                 if (board[ply - 1].IsInCheck)
                 {
-                    return (board[ply - 1].IsWhiteToMove ? Convert.ToInt32(-10000 * depth) : Convert.ToInt32(10000 * depth), pv);
+                    return (Convert.ToInt32(-100000 + ply), pv);
                 }
                 return (0, pv);
             }
@@ -102,7 +107,6 @@ namespace KnightOwlBot
             List<string> bestPv = [];
             moves = SortMoves(moves);
             int score;
-            int bestScore = board[ply - 1].IsWhiteToMove ? int.MinValue : int.MaxValue;
 
             if (board.Count <= ply)
             {
@@ -115,46 +119,28 @@ namespace KnightOwlBot
 
                 if (move.IsCapture && depth == 1) //quiescence search
                 {
-                    (score, pv) = Search(board, depth, ply + 1, alpha, beta);
+                    (score, pv) = Search(board, depth, ply + 1, -beta, -alpha);
+                    score *= -1;
                 }
                 else
                 {
-                    (score, pv) = Search(board, depth - 1, ply + 1, alpha, beta);
+                    (score, pv) = Search(board, depth - 1, ply + 1, -beta, -alpha);
+                    score *= -1;
                 }
 
-                if (board[ply - 1].IsWhiteToMove)
+                if (score >= beta)
                 {
-                    if (beta <= score)
-                    {
-                        pv.Add(move.Notation);
-                        return (beta, pv);
-                    }
-                    if (score > bestScore)
-                    {
-                        bestMove = move.Notation;
-                        bestPv = pv;
-                        bestScore = score;
-                        alpha = Math.Max(bestScore, alpha);
-                    }
+                    return (beta, pv);
                 }
-                else
+                if (score > alpha)
                 {
-                    if (alpha >= score)
-                    {
-                        pv.Add(move.Notation);
-                        return (alpha, pv);
-                    }
-                    if (score < bestScore)
-                    {
-                        bestMove = move.Notation;
-                        bestPv = pv;
-                        bestScore = score;
-                        beta = Math.Min(bestScore, beta);
-                    }
+                    bestMove = move.Notation;
+                    bestPv = pv;
+                    alpha = score;
                 }
             }
             bestPv.Add(bestMove);
-            return (bestScore, bestPv);
+            return (alpha, bestPv);
         }
 
         private static int Eval(Board board)
@@ -213,7 +199,8 @@ namespace KnightOwlBot
                 }
                 Material += piece.Material;
             }
-            return Material;
+            int perspective = board.IsWhiteToMove ? 1 : -1;
+            return Material * perspective;
         }
 
         private static Move[] SortMoves(Move[] moves)

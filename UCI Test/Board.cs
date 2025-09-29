@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 
 namespace KnightOwlBot
 {
@@ -400,7 +398,7 @@ namespace KnightOwlBot
             List<Move> legalMoves = [];
             UInt64 kingMask = 0;
             UInt64 biboard = Board.GetBiboard(curBoard);
-            //PrintBitboard(biboard);
+
             foreach (Move m in moves)
             {
                 if (curBoard.DoubleCheck && curBoard.board[m.Index1].Notation is not 6 and not 12) //only king moves allowed
@@ -408,10 +406,8 @@ namespace KnightOwlBot
                     continue;
                 }
 
-
                 foreach (var u in curBoard.BiboardPinned)
                 {
-                    //PrintBitboard(u);
                     if ((1UL << m.Index1 & u) != 0 && (1UL << m.Index2 & u) == 0) //pinned piece moved outside pin line
                     {
                         goto endLoop;
@@ -437,20 +433,19 @@ namespace KnightOwlBot
                         break;
                     }
                 }
+
                 if (m.IsCapture && m.LastCapture == 0) //en passent capture
                 {
-                    //chek if captured pawn was pinned
                     int indexOfCapturedPawn = newBoard.IsWhiteToMove ? m.Index2 + 8 : m.Index2 - 8;
-                    foreach (var u in curBoard.BiboardPinned)
+                    foreach (var u in curBoard.BiboardPinned) //chek if captured pawn was pinned
                     {
                         if ((1UL << indexOfCapturedPawn & u) != 0)
                         {
                             break;
                         }
                     }
-                    //check if king is check after en passent capture
                     newBoard.IsWhiteToMove = !newBoard.IsWhiteToMove;
-                    UInt64 bitboardEp = Board.GetBiboard(newBoard);
+                    UInt64 bitboardEp = Board.GetBiboard(newBoard); //check if king is check after en passent capture
                     newBoard.IsWhiteToMove = !newBoard.IsWhiteToMove;
 
                     if ((kingMask & bitboardEp) == 0)
