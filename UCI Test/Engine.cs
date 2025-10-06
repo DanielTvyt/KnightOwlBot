@@ -105,7 +105,7 @@ namespace KnightOwlBot
 
             string bestMove = null;
             List<string> bestPv = [];
-            moves = SortMoves(moves);
+            moves = SortMoves(moves, board[ply - 1]);
             int score;
 
             if (board.Count <= ply)
@@ -158,7 +158,7 @@ namespace KnightOwlBot
             }
             Move[] moves = Board.GetLegalMoves(board[ply - 1]);
             moves = Array.FindAll(moves, m => m.IsCapture);
-            moves = SortMoves(moves);
+            moves = SortMoves(moves, board[ply - 1]);
             int score;
             string bestMove = null;
             if (board.Count <= ply)
@@ -244,8 +244,46 @@ namespace KnightOwlBot
             return Material * perspective;
         }
 
-        private static Move[] SortMoves(Move[] moves)
+        private static Move[] SortMoves(Move[] moves, Board board)
         {
+            foreach (Move move in moves)
+            {
+                if (move.IsCapture)
+                {
+                    Piece capturedPiece = board.board[move.Index2];
+                    if (capturedPiece != null)
+                    {
+                        move.MoveValue = Math.Abs(capturedPiece.Material * 10) - Math.Abs(board.board[move.Index1].Material);
+                    }
+                    else
+                    {
+                        move.MoveValue = 900; //en passent capture value
+                    }
+                }
+                else if (move.PromPiece != '\0')
+                {
+                    switch (move.PromPiece)
+                    {
+                        case 'Q' or 'q':
+                            move.MoveValue = 8000;
+                            break;
+                        case 'R' or 'r':
+                            move.MoveValue = 4000;
+                            break;
+                        case 'B' or 'b':
+                            move.MoveValue = 3000;
+                            break;
+                        case 'N' or 'n':
+                            move.MoveValue = 2000;
+                            break;
+                    }
+                }
+                else
+                {
+                    move.MoveValue = 0;
+                }
+            }
+
             Array.Sort(moves, delegate (Move x, Move y) { return y.MoveValue.CompareTo(x.MoveValue); });
             return moves;
         }

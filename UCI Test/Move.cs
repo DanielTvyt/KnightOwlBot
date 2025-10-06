@@ -9,6 +9,6 @@
         public char PromPiece { get; set; }
         public byte LastCapture { get; set; }
         public int EnPassentIndex { get; set; }
-        public byte MoveValue { get; set; }
+        public int MoveValue { get; set; }
     }
 }

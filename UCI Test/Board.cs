@@ -297,7 +297,7 @@ namespace KnightOwlBot
                         {
                            for (int j = 0; j < 4; j++)
                            {
-                               move = moveHelper(i, i + fw, false, (byte)0, 9, promPieces[j]);
+                               move = moveHelper(i, i + fw, false, (byte)0, promPieces[j]);
                                moves.Add(move);
                            }
                         }
@@ -307,7 +307,7 @@ namespace KnightOwlBot
                             lastCap = board.board[i + cap1].Notation;
                             for (int j = 0; j < 4; j++)
                             {
-                                move = moveHelper(i, i + cap1, true, lastCap, 10, promPieces[j]);
+                                move = moveHelper(i, i + cap1, true, lastCap, promPieces[j]);
                                 moves.Add(move);
                             }
 
@@ -318,7 +318,7 @@ namespace KnightOwlBot
                             lastCap = board.board[i + cap2].Notation;
                             for (int j = 0; j < 4; j++)
                             {
-                                move = moveHelper(i, i + cap2, true, lastCap, 10, promPieces[j]);
+                                move = moveHelper(i, i + cap2, true, lastCap, promPieces[j]);
                                 moves.Add(move);
                             }
                         }
@@ -326,11 +326,11 @@ namespace KnightOwlBot
                     }
                     else if (board.board[i + fw] == null) //move one forward
                     {
-                        moves.Add(moveHelper(i, i + fw, false, (byte)0, 1, '\0'));
+                        moves.Add(moveHelper(i, i + fw, false, (byte)0, '\0'));
 
                         if (i / 8 == start && board.board[i + fw2] == null) 
                         {
-                            move = moveHelper(i, i + fw2, false, (byte)0, 1, '\0');
+                            move = moveHelper(i, i + fw2, false, (byte)0, '\0');
                             move.EnPassentIndex = i + fw;
                             moves.Add(move);
                         }
@@ -339,13 +339,13 @@ namespace KnightOwlBot
                     if (i % 8 != 0 && (board.board[i+cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove || (i + cap1 == board.EnPassentIndex && i / 8 != start))) //capture
                     {
                         lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : (byte)0;
-                        moves.Add(moveHelper(i, i + cap1, true, lastCap, 6, '\0'));
+                        moves.Add(moveHelper(i, i + cap1, true, lastCap, '\0'));
                     }
 
                     if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove || (i + cap2 == board.EnPassentIndex && i / 8 != start)))
                     {
                         lastCap = board.board[i + cap2] != null ? board.board[i + cap2].Notation : (byte)0;
-                        moves.Add(moveHelper(i, i + cap2, true, lastCap, 6, '\0'));
+                        moves.Add(moveHelper(i, i + cap2, true, lastCap, '\0'));
                     }
                     continue;
                 }
@@ -368,7 +368,7 @@ namespace KnightOwlBot
 
                         if (board.board[j] == null)
                         {
-                            moves.Add(moveHelper(i, j, false, (byte)0, 1, '\0'));
+                            moves.Add(moveHelper(i, j, false, (byte)0, '\0'));
                         }
                         else if (board.board[j].IsWhite == board.IsWhiteToMove)
                         {
@@ -377,7 +377,7 @@ namespace KnightOwlBot
                         else
                         {
                             lastCap = board.board[j].Notation;
-                            moves.Add(moveHelper(i, j, true, lastCap, 5, '\0'));
+                            moves.Add(moveHelper(i, j, true, lastCap, '\0'));
                             break;
                         }
 
@@ -537,7 +537,7 @@ namespace KnightOwlBot
             return newBoard;
         }
 
-        private static Move moveHelper(int index1, int index2, bool isCapture, byte lastCapture, byte moveValue, char promPiece)
+        private static Move moveHelper(int index1, int index2, bool isCapture, byte lastCapture, char promPiece)
         {
             Move move = new()
             {
@@ -546,7 +546,6 @@ namespace KnightOwlBot
                 Index2 = index2,
                 IsCapture = isCapture,
                 LastCapture = lastCapture,
-                MoveValue = moveValue
             };
             if (promPiece != '\0')
             {
@@ -580,6 +579,7 @@ namespace KnightOwlBot
             }
             Console.WriteLine(" \n");
         }
+
         public static void PrintBitboard(UInt64 bitboard)
         {
             for (int i = 0; i < 64; i++)
