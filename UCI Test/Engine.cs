@@ -246,7 +246,7 @@ namespace KnightOwlBot
 
         private static Move[] SortMoves(Move[] moves)
         {
-            Array.Sort(moves, delegate (Move x, Move y) { return x.MoveValue.CompareTo(y.MoveValue); });
+            Array.Sort(moves, delegate (Move x, Move y) { return y.MoveValue.CompareTo(x.MoveValue); });
             return moves;
         }
     }
