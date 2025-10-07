@@ -6,6 +6,7 @@ namespace KnightOwlBot
 {
     internal class Engine
     {
+        private const int INF = int.MaxValue - 1;
         private static uint nodes = 0;
         private static uint maxDepth;
         private static long maxTime;
@@ -29,7 +30,6 @@ namespace KnightOwlBot
         }
         public static string Run(Board board, uint time, uint inc)
         {
-            string pvString;
             if (time == 0)
             {
                 time = 500 * 100; //if no time is given search for 500ms
@@ -45,8 +45,8 @@ namespace KnightOwlBot
             {
                 int ply = 0;
                 maxDepth = depth;
-                int alpha = -10000000;
-                int beta  =  10000000;
+                int alpha = -INF;
+                int beta  =  INF;
                 try
                 {
                     (score, pv) = Search(boards, depth, ply + 1, alpha, beta);
@@ -57,15 +57,16 @@ namespace KnightOwlBot
                 }
 
                 long takenTime = watch.ElapsedMilliseconds == 0 ? 1 : watch.ElapsedMilliseconds;
+                while (pv.Remove(null)) { }
                 pv.Reverse();
-                pvString = string.Join(" ", pv);
+                string pvString = string.Join(" ", pv);
                 int selDepth = pv.Count;
                 string bestScore;
 
-                if (Math.Abs(score) > 10000) //checkmate
+                if (Math.Abs(score) > INF - 1000) //checkmate
                 {
                     string perspective = score > 0 ? "" : "-";
-                    bestScore = "mate " + perspective + (100000 - Math.Abs(score)) / 2;
+                    bestScore = "mate " + perspective + (INF - Math.Abs(score)) / 2;
                 }
                 else
                 {
@@ -98,7 +99,7 @@ namespace KnightOwlBot
             {
                 if (board[ply - 1].IsInCheck)
                 {
-                    return (Convert.ToInt32(-100000 + ply), pv);
+                    return (Convert.ToInt32(-INF + ply), pv);
                 }
                 return (0, pv);
             }
