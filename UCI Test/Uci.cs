@@ -7,8 +7,8 @@ namespace KnightOwlBot
         public static void Listen()
         { 
             string bestmove;
-            string position = "";
-            Board board;
+            string position = "position startpos";
+            Board board = GetPos(position);
 
             while (true)
             {
@@ -20,11 +20,10 @@ namespace KnightOwlBot
 
                 if (UciIn.Contains("position"))
                 {
-                    position = UciIn;
+                    board = GetPos(UciIn);
                 }
                 else if (UciIn.Contains("go"))
                 {
-                    board = Uci.GetPos(position);
                     if (board.IsWhiteToMove)
                     {
                         if (UciIn.Contains("wtime"))
@@ -101,13 +100,11 @@ namespace KnightOwlBot
                 }
                 else if (UciIn == "print")
                 {
-                    board = Uci.GetPos(position);
                     Board.PrintBoard(board);
                 }
                 else if (UciIn.Contains("perft"))
                 {
                     int depth;
-                    board = Uci.GetPos(position);
                     try
                     {
                         depth = Convert.ToInt32(UciIn[6].ToString()) - 1;
@@ -161,44 +158,52 @@ namespace KnightOwlBot
 
         public static Board GetPos(string uciIn)
         {
+            Board board = Board.BuildFromFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            if (uciIn == "position startpos")
+            {
+                return board;
+            }
             string fenString;
             if (uciIn.Contains("fen"))   //positon fen <fenstring>
             {
                 fenString = uciIn.Remove(0, 13);
-                return Board.BuildFromFenString(fenString);
+                if (uciIn.Contains("moves"))
+                {
+                    fenString = fenString.Remove(fenString.IndexOf("moves") - 1, fenString.Length - fenString.IndexOf("moves") + 1);
+                }
+                board = Board.BuildFromFenString(fenString);
             }
-            else
+            if (uciIn.Contains("moves"))
             {
-                Board board = Board.BuildFromFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-                if (uciIn == "position startpos")
-                {
-                    return board;
-                }
-                else                     //position startpos moves <move1 move2 ...>
-                {
-                    string[] moves = uciIn.Split(' ');
+                uciIn = uciIn.Remove(0, (uciIn.IndexOf("moves") + 6));
+                string[] moves = uciIn.Split(' ');
 
-                    for (int i = 3; i < moves.Length; i++) //skip pos, start, moves
+                for (int i = 0; i < moves.Length; i++) //skip pos, start, moves
+                {
+                    Move move = new()
                     {
-                        Move move = new()
+                        Notation = moves[i],
+                        Index1 = (moves[i][0] - 'a') + (8 - (moves[i][1] - '0')) * 8,
+                        Index2 = (moves[i][2] - 'a') + (8 - (moves[i][3] - '0')) * 8
+                    };
+                    if (move.Notation.Length == 5)
+                    {
+                        move.PromPiece = move.Notation[4];
+                        if (board.IsWhiteToMove)
                         {
-                            Notation = moves[i],
-                            Index1 = (moves[i][0] - 'a') + (8 - (moves[i][1] - '0')) * 8,
-                            Index2 = (moves[i][2] - 'a') + (8 - (moves[i][3] - '0')) * 8
-                        };
-                        if (move.Notation.Length == 5)
-                        {
-                            move.PromPiece = move.Notation[4];
-                            if (board.IsWhiteToMove)
-                            {
-                                move.PromPiece = char.ToUpper(move.PromPiece);
-                            }
+                            move.PromPiece = char.ToUpper(move.PromPiece);
                         }
-                        board = Board.DoMove(move, board);
                     }
-                    return board;
+                    if (board.board[move.Index1].Notation is 1 or 7 && (move.Index1 - move.Index2) % 8 != 0 && board.board[move.Index2] == null)
+                    {
+                        move.IsCapture = true; //en passent capture
+                        move.LastCapture = 0;
+                    }
+
+                    board = Board.DoMove(move, board);
                 }
             }
+            return board;
         }
     }
 }
