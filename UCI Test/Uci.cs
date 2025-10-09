@@ -178,7 +178,7 @@ namespace KnightOwlBot
                 uciIn = uciIn.Remove(0, (uciIn.IndexOf("moves") + 6));
                 string[] moves = uciIn.Split(' ');
 
-                for (int i = 0; i < moves.Length; i++) //skip pos, start, moves
+                for (int i = 0; i < moves.Length; i++)
                 {
                     Move move = new()
                     {

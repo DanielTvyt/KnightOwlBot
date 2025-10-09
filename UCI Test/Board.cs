@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace KnightOwlBot
 {
@@ -24,11 +25,6 @@ namespace KnightOwlBot
                 ThreeFold = [.. this.ThreeFold],
                 IsWhiteToMove = this.IsWhiteToMove,
                 EnPassentIndex = this.EnPassentIndex,
-                IsInCheck = this.IsInCheck,
-                DoubleCheck = this.DoubleCheck,
-                BiboardAttacked = this.BiboardAttacked,
-                BiboardCheck = this.BiboardCheck,
-                BiboardPinned = [.. this.BiboardPinned]
             };
         }
 
@@ -520,7 +516,7 @@ namespace KnightOwlBot
         {
             Move move = new()
             {
-                Notation = IndexToPos(index1) + IndexToPos(index2),
+                Notation = LookupTables.indexToPos[index1] + LookupTables.indexToPos[index2],
                 Index1 = index1,
                 Index2 = index2,
                 IsCapture = isCapture,
@@ -533,11 +529,6 @@ namespace KnightOwlBot
             }
 
             return move;
-        }
-
-        private static string IndexToPos(int index)
-        {
-            return "" + (char)(index % 8 + 97) + Convert.ToString(8 - index / 8); //char 97 = a
         }
 
         public static void PrintBoard(Board board)
