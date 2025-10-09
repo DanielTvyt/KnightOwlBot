@@ -158,6 +158,16 @@ namespace KnightOwlBot
                 alpha = standPat;
             }
             Move[] moves = Board.GetLegalMoves(board[ply - 1]);
+
+            if (moves.Length == 0)
+            {
+                if (board[ply - 1].IsInCheck)
+                {
+                    return (Convert.ToInt32(-INF + ply), pv);
+                }
+                return (0, pv);
+            }
+
             moves = Array.FindAll(moves, m => m.IsCapture);
             moves = SortMoves(moves, board[ply - 1]);
             int score;
