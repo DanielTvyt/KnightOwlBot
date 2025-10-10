@@ -13,20 +13,9 @@ namespace KnightOwlBot
         public bool IsInCheck { get; set; }
         public bool DoubleCheck { get; set; }
         public int IndexOfCheckingPiece { get; set; }
-        public UInt64 BiboardAttacked { get; set; }
-        public UInt64 BiboardCheck { get; set; }
-        public List<UInt64> BiboardPinned {  get; set; }
-
-        private Board Clone()
-        {
-            return new Board
-            {
-                board = (Piece[])this.board.Clone(),
-                ThreeFold = [.. this.ThreeFold],
-                IsWhiteToMove = this.IsWhiteToMove,
-                EnPassentIndex = this.EnPassentIndex,
-            };
-        }
+        public UInt64 BitboardAttacked { get; set; }
+        public UInt64 BitboardCheck { get; set; }
+        public List<UInt64> BitboardPinned {  get; set; }
 
         public static Board BuildFromFenString(string fenString)
         {
@@ -34,7 +23,7 @@ namespace KnightOwlBot
             {
                 board = new Piece[64],
                 ThreeFold = [],
-                BiboardPinned = []
+                BitboardPinned = []
             };
             int y = 0;
 
@@ -74,65 +63,64 @@ namespace KnightOwlBot
             return boardOut;
         }
 
-        private static UInt64 GetBiboard(Board board)
+        private UInt64 GetBiboard()
         {
-            board.IsWhiteToMove = !board.IsWhiteToMove;
+            IsWhiteToMove = !IsWhiteToMove;
+            BitboardAttacked = 0;
+            BitboardPinned = [];
+            BitboardCheck = 0;
+            IsInCheck = false;
+            DoubleCheck = false;
 
-            board.BiboardAttacked = 0;
-            board.BiboardPinned = [];
-            board.BiboardCheck = 0;
-            board.IsInCheck = false;
-            board.DoubleCheck = false;
+            int cap1 = IsWhiteToMove ? -9 : 7;
+            int cap2 = IsWhiteToMove ? -7 : 9;
 
-            int cap1 = board.IsWhiteToMove ? -9 : 7;
-            int cap2 = board.IsWhiteToMove ? -7 : 9;
-
-            byte opponentKing = board.IsWhiteToMove ? (byte)12 : (byte)6;
+            byte opponentKing = IsWhiteToMove ? (byte)12 : (byte)6;
 
             for (int i = 0; i < 64; i++)
             {
-                if (board.board[i] == null || board.board[i].IsWhite != board.IsWhiteToMove)
+                if (board[i] == null || board[i].IsWhite != IsWhiteToMove)
                 {
                     continue;
                 }
 
-                if (board.board[i].Notation is 1 or 7) //P or p
+                if (board[i].Notation is 1 or 7) //P or p
                 {
                     if (i % 8 != 0) //capture
                     {
-                        board.BiboardAttacked |= 1UL << (i + cap1);
-                        if (board.board[i + cap1] != null && board.board[i + cap1].Notation == opponentKing)
+                        BitboardAttacked |= 1UL << (i + cap1);
+                        if (board[i + cap1] != null && board[i + cap1].Notation == opponentKing)
                         {
-                            if (board.IsInCheck) //double check
+                            if (IsInCheck) //double check
                             {
-                                board.DoubleCheck = true;
-                                board.IndexOfCheckingPiece = -1;
+                                DoubleCheck = true;
+                                IndexOfCheckingPiece = -1;
                             }
-                            board.IndexOfCheckingPiece = i;
-                            board.IsInCheck = true;
+                            IndexOfCheckingPiece = i;
+                            IsInCheck = true;
                         }
                     }
                     if (i % 8 != 7)
                     {
-                        board.BiboardAttacked |= 1UL << (i + cap2);
-                        if (board.board[i + cap2] != null && board.board[i + cap2].Notation == opponentKing)
+                        BitboardAttacked |= 1UL << (i + cap2);
+                        if (board[i + cap2] != null && board[i + cap2].Notation == opponentKing)
                         {
-                            if (board.IsInCheck) //double check
+                            if (IsInCheck) //double check
                             {
-                                board.DoubleCheck = true;
-                                board.IndexOfCheckingPiece = -1;
+                                DoubleCheck = true;
+                                IndexOfCheckingPiece = -1;
                             }
-                            board.IndexOfCheckingPiece = i;
-                            board.IsInCheck = true;
+                            IndexOfCheckingPiece = i;
+                            IsInCheck = true;
                         }
                     }
                     continue;
                 }
 
-                for (int k = 0; k < board.board[i].MoveDelta.Length; k++)
+                for (int k = 0; k < board[i].MoveDelta.Length; k++)
                 {
                     int lastJ = i;
-                    int moveDelta = board.board[i].MoveDelta[k];
+                    int moveDelta = board[i].MoveDelta[k];
                     for (int j = i + moveDelta; j < 64 && j >= 0; j += moveDelta)
                     {
                         if (j % 8 == 0 && lastJ % 8 == 7 || j % 8 == 7 && lastJ % 8 == 0 || i % 8 < 2 && moveDelta is -10 or 6 || i % 8 > 5 && moveDelta is 10 or -6) //detect board edge
@@ -140,61 +128,61 @@ namespace KnightOwlBot
                             break;
                         }
 
-                        board.BiboardAttacked |= 1UL << j;
-                        if (board.board[j] == null)
+                        BitboardAttacked |= 1UL << j;
+                        if (board[j] == null)
                         {
-                            if (board.board[i].IsSliding)
+                            if (board[i].IsSliding)
                             {
                                 lastJ = j;
                                 continue;
                             }
                             break;
                         }
-                        if (board.board[j].IsWhite == board.IsWhiteToMove) //same color piece
+                        if (board[j].IsWhite == IsWhiteToMove) //same color piece
                         {
                             break;
                         }
-                        if (!board.board[i].IsSliding && board.board[j].IsWhite != board.IsWhiteToMove)
+                        if (!board[i].IsSliding && board[j].IsWhite != IsWhiteToMove)
                         {
-                            if (board.board[j].Notation == opponentKing) //Knight check
+                            if (board[j].Notation == opponentKing) //Knight check
                             {
-                                if (board.IsInCheck) //double check
+                                if (IsInCheck) //double check
                                 {
-                                    board.DoubleCheck = true;
-                                    board.IndexOfCheckingPiece = -1;
+                                    DoubleCheck = true;
+                                    IndexOfCheckingPiece = -1;
                                     break;
                                 }
-                                board.IsInCheck = true;
-                                board.IndexOfCheckingPiece = i;
+                                IsInCheck = true;
+                                IndexOfCheckingPiece = i;
                             }
                             break;
                         }
 
                         //opponent piece (can be pinned)
-                        if (board.board[j].Notation == opponentKing) //Cant pin the king
+                        if (board[j].Notation == opponentKing) //Cant pin the king
                         {
-                            if (board.IsInCheck) //double check
+                            if (IsInCheck) //double check
                             {
-                                board.DoubleCheck = true;
-                                board.IndexOfCheckingPiece = -1;
+                                DoubleCheck = true;
+                                IndexOfCheckingPiece = -1;
                             }
                             else
                             {
-                                board.IndexOfCheckingPiece = i;
-                                board.IsInCheck = true;
-                                isPinned(board, i, lastJ, i, moveDelta, true);
+                                IndexOfCheckingPiece = i;
+                                IsInCheck = true;
+                                isPinned(this, i, lastJ, i, moveDelta, true);
                             }
                             lastJ = j;
                             continue;
                         }
 
-                        isPinned(board, i, lastJ, i, moveDelta, false);
+                        isPinned(this, i, lastJ, i, moveDelta, false);
                         break;
                     }
                 }
             }
-            board.IsWhiteToMove = !board.IsWhiteToMove;
-            return board.BiboardAttacked;
+            IsWhiteToMove = !IsWhiteToMove;
+            return BitboardAttacked;
         }
 
         private static void isPinned(Board board, int posPinningPiece, int lastJ, int i, int moveDelta, bool isInCheck)
@@ -220,7 +208,7 @@ namespace KnightOwlBot
                     {
                         return;
                     }
-                    board.BiboardCheck |= 1UL << j;
+                    board.BitboardCheck |= 1UL << j;
                     continue;
                 }
 
@@ -232,7 +220,7 @@ namespace KnightOwlBot
                 }
                 if (board.board[j].Notation == opponentKing)
                 {
-                    board.BiboardPinned.Add(pinMask);
+                    board.BitboardPinned.Add(pinMask);
                     break;
                 }
                 if (!encounteredFirstPiece) //only one piece between attacker and king
@@ -360,17 +348,22 @@ namespace KnightOwlBot
             return [.. moves];
         }
 
-        public static Move[] GetLegalMoves(Board curBoard)
+        public static Move[] GetLegalMoves(Board board)
         {
-            Move[] moves = GetPseudoLegalMoves(curBoard);
+            Move[] moves = GetPseudoLegalMoves(board);
             List<Move> legalMoves = [];
+            UInt64 bitboard = board.GetBiboard();
+            int indexOfCheckingPiece = board.IndexOfCheckingPiece;
+            UInt64 bitboardCheck = board.BitboardCheck;
+            List<UInt64> pinMasks = board.BitboardPinned;
             UInt64 curKingMask = 0;
-            UInt64 biboard = Board.GetBiboard(curBoard);
-            byte kingNotation = curBoard.IsWhiteToMove ? (byte)6 : (byte)12;
+            bool isInCheck = board.IsInCheck;
+            bool doubleCheck = board.DoubleCheck;
+            byte kingNotation = board.IsWhiteToMove ? (byte)6 : (byte)12;
 
             for (int i = 0; i < 64; i++)
             {
-                if (curBoard.board[i] != null && curBoard.board[i].Notation == kingNotation) //K or k
+                if (board.board[i] != null && board.board[i].Notation == kingNotation) //K or k
                 {
                     curKingMask = 1UL << i;
                     break;
@@ -380,12 +373,12 @@ namespace KnightOwlBot
             foreach (Move m in moves)
             {
                 UInt64 kingMask = curKingMask;
-                if (curBoard.DoubleCheck && curBoard.board[m.Index1].Notation is not 6 and not 12) //only king moves allowed
+                if (doubleCheck && board.board[m.Index1].Notation is not 6 and not 12) //only king moves allowed
                 {
                     continue;
                 }
 
-                foreach (var u in curBoard.BiboardPinned)
+                foreach (var u in pinMasks)
                 {
                     if ((1UL << m.Index1 & u) != 0 && (1UL << m.Index2 & u) == 0) //pinned piece moved outside pin line
                     {
@@ -393,78 +386,81 @@ namespace KnightOwlBot
                     }
                 }
 
-                if (curBoard.IsInCheck) //take checking piece or block check
+                if (isInCheck) //take checking piece or block check
                 {
-                    if ((m.Index2 == curBoard.IndexOfCheckingPiece || (curBoard.BiboardCheck & 1UL << m.Index2) != 0) && curBoard.board[m.Index1].Notation != kingNotation)
+                    if ((m.Index2 == indexOfCheckingPiece || (bitboardCheck & 1UL << m.Index2) != 0) && board.board[m.Index1].Notation != kingNotation)
                     {
                         legalMoves.Add(m);
                         continue;
                     }
                 }
-                
-                Board newBoard = DoMove(m, curBoard);
-
-                if (newBoard.board[m.Index2].Notation == kingNotation)
-                {
-                    kingMask = 1UL << m.Index2;
-                }
 
                 if (m.IsCapture && m.LastCapture == 0) //en passent capture
                 {
-                    int indexOfCapturedPawn = newBoard.IsWhiteToMove ? m.Index2 + 8 : m.Index2 - 8;
-                    foreach (var u in curBoard.BiboardPinned) //chek if captured pawn was pinned
+                    int indexOfCapturedPawn = !board.IsWhiteToMove ? m.Index2 + 8 : m.Index2 - 8;
+                    foreach (var u in pinMasks) //chek if captured pawn was pinned
                     {
                         if ((1UL << indexOfCapturedPawn & u) != 0)
                         {
                             break;
                         }
                     }
-                    newBoard.IsWhiteToMove = !newBoard.IsWhiteToMove;
-                    UInt64 bitboardEp = Board.GetBiboard(newBoard); //check if king is check after en passent capture
-                    newBoard.IsWhiteToMove = !newBoard.IsWhiteToMove;
+                    board.DoMove(m);
+                    board.IsWhiteToMove = !board.IsWhiteToMove;
+                    UInt64 bitboardEp = board.GetBiboard(); //check if king is check after en passent capture
+                    board.IsWhiteToMove = !board.IsWhiteToMove;
 
                     if ((kingMask & bitboardEp) == 0)
                     {
                         legalMoves.Add(m);
                     }
+                    board.UndoMove(m);
                     continue;
                 }
-                if ((kingMask & biboard) == 0)
+
+                board.DoMove(m);
+
+                if (board.board[m.Index2].Notation == kingNotation)
+                {
+                    kingMask = 1UL << m.Index2;
+                }
+
+                if ((kingMask & bitboard) == 0)
                 {
                     legalMoves.Add(m);
                 }
 
-            endLoop:;
+                board.UndoMove(m);
+                endLoop:;
             }
             return [.. legalMoves];
         }
 
-        public static Board DoMove(Move move, Board board)
-        {
-            Board newBoard = board.Clone();
+        public void DoMove(Move move)
+        { 
             int index1 = move.Index1;
             int index2 = move.Index2;
 
-            newBoard.board[index2] = newBoard.board[index1];
-            newBoard.board[index1] = null;
+            board[index2] = board[index1];
+            board[index1] = null;
 
-            if (newBoard.board[index2].Material == 0)
+            if (board[index2].Material == 0)
             {
                 if (index1 == 60 || index1 == 4)
                 {
                     int rookMove = 0;
                     char rook;
-                    if (newBoard.IsWhiteToMove)
+                    if (IsWhiteToMove)
                     {
                         rook = 'R';
                         if (index2 == 62)
                         {
-                            newBoard.board[63] = null;
+                            board[63] = null;
                             rookMove = 61;
                         }
                         else if (index2 == 58)
                         {
-                            newBoard.board[56] = null;
+                            board[56] = null;
                             rookMove = 59;
                         }
                     }
@@ -473,43 +469,71 @@ namespace KnightOwlBot
                         rook = 'r';
                         if(index2 == 6)
                         {
-                            newBoard.board[7] = null;
+                            board[7] = null;
                             rookMove = 5;
                         }
                         else if (index2 == 2)
                         {
-                            newBoard.board[0] = null;
+                            board[0] = null;
                             rookMove = 3;
                         }
                     }
                     if (rookMove != 0)
                     {
-                        newBoard.board[rookMove] = Piece.CreatePiece(rook);
+                        board[rookMove] = Piece.CreatePiece(rook);
                     }
                 }
             }
 
             if (move.PromPiece != 0)
             {
-                newBoard.board[index2] = Piece.CreatePiece(move.PromPiece);
+                board[index2] = Piece.CreatePiece(move.PromPiece);
             }
 
-            newBoard.EnPassentIndex = move.EnPassentIndex;
+            EnPassentIndex = move.EnPassentIndex;
 
             if (move.IsCapture && move.LastCapture == 0)
             {
-                if(newBoard.IsWhiteToMove)
+                if(IsWhiteToMove)
                 {
-                    newBoard.board[index2 + 8] = null;
+                    board[index2 + 8] = null;
                 }
                 else
                 {
-                    newBoard.board[index2 - 8] = null;
+                    board[index2 - 8] = null;
                 }
             }
-            newBoard.IsWhiteToMove = !newBoard.IsWhiteToMove;
+            IsWhiteToMove = !IsWhiteToMove;
+        }
 
-            return newBoard;
+        public void UndoMove(Move move)
+        {
+            int index2 = move.Index1;
+            int index1 = move.Index2;
+
+            board[index2] = board[index1];
+            board[index1] = null;
+            if (move.IsCapture)
+            {
+                if (move.LastCapture != 0)
+                {
+                    board[index1] = Piece.CreatePiece(Piece.byteToChar(move.LastCapture));
+                }
+                else
+                {
+                    int pawnIndex = IsWhiteToMove ? index1 - 8 : index1 + 8;
+                    board[pawnIndex] = Piece.CreatePiece(board[index2].IsWhite ? 'p' : 'P');
+                }
+            }
+
+            if (move.PromPiece != 0)
+            {
+                board[index2] = Piece.CreatePiece(IsWhiteToMove ? 'p' : 'P');
+            }
+
+            move.EnPassentIndex = EnPassentIndex;
+
+            IsWhiteToMove = !IsWhiteToMove;
         }
 
         private static Move moveHelper(int index1, int index2, bool isCapture, byte lastCapture, char promPiece)
@@ -531,21 +555,21 @@ namespace KnightOwlBot
             return move;
         }
 
-        public static void PrintBoard(Board board)
+        public void PrintBoard()
         {
-            for (int i = 0; i < board.board.Length; i++)
+            for (int i = 0; i < board.Length; i++)
             {
                 if (i % 8 == 0)
                 {
                     Console.WriteLine(" ");
                 }
 
-                if (board.board[i] == null)
+                if (board[i] == null)
                 {
                     Console.Write("- ");
                     continue;
                 }
-                Console.Write(Piece.byteToChar(board.board[i].Notation) + " ");
+                Console.Write(Piece.byteToChar(board[i].Notation) + " ");
             }
             Console.WriteLine(" \n");
         }

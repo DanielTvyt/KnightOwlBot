@@ -100,7 +100,7 @@ namespace KnightOwlBot
                 }
                 else if (UciIn == "print")
                 {
-                    Board.PrintBoard(board);
+                    board.PrintBoard();
                 }
                 else if (UciIn.Contains("perft"))
                 {
@@ -123,8 +123,6 @@ namespace KnightOwlBot
                         timer1.Start();
                         Move[] moves = Board.GetLegalMoves(board);
                         int ply = 1;
-                        Board[] boards = new Board[i + 1];
-                        boards[0] = board;
                         if (i == 0)
                         {
                             foreach (var move in moves)
@@ -138,11 +136,12 @@ namespace KnightOwlBot
                         }
                         for (int j = 0; j < moves.Length; j++)
                         {
-                            boards[ply] = Board.DoMove(moves[j], boards[ply - 1]);
+                            board.DoMove(moves[j]);
                             Console.Write(moves[j].Notation + ": ");
-                            curNodes = Engine.Perft(boards, i, ply + 1);
+                            curNodes = Engine.Perft(board, i, ply + 1);
                             Console.WriteLine(curNodes);
                             nodes += curNodes;
+                            board.UndoMove(moves[j]);
                         }
                         timer1.Stop();
                         Console.WriteLine("ply: " + (i + 1) + " Time " + timer1.ElapsedMilliseconds + " Nodes " + nodes + " knps " + nodes / ((ulong)timer1.ElapsedMilliseconds + 1));
@@ -200,7 +199,7 @@ namespace KnightOwlBot
                         move.LastCapture = 0;
                     }
 
-                    board = Board.DoMove(move, board);
+                    board.DoMove(move);
                 }
             }
             return board;
