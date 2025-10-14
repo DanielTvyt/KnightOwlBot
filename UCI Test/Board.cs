@@ -239,7 +239,6 @@ namespace KnightOwlBot
             List<Move> moves = [];
             byte lastCap;
 
-            string promPieces = board.IsWhiteToMove ? "QRBN" : "qrbn";
             int fw = board.IsWhiteToMove ? -8 : 8;
             int cap1 = board.IsWhiteToMove ? -9 : 7;
             int cap2 = board.IsWhiteToMove ? -7 : 9;
@@ -257,11 +256,12 @@ namespace KnightOwlBot
                 {
                     if ((i + fw) / 8 == prom) //Promotion
                     {
+                        char[] promPieces = board.IsWhiteToMove ? ['Q', 'R', 'B', 'N'] : ['q', 'r', 'b', 'n'];
                         if (board.board[i + fw] == null)
                         {
                            for (int j = 0; j < 4; j++)
                            {
-                               moves.Add(moveHelper(i, i + fw, false, (byte)0, promPieces[j]));
+                               moves.Add(new Move(i, i + fw, false, 0, -1, promPieces[j]));
                            }
                         }
 
@@ -270,7 +270,7 @@ namespace KnightOwlBot
                             lastCap = board.board[i + cap1].Notation;
                             for (int j = 0; j < 4; j++)
                             {
-                                moves.Add(moveHelper(i, i + cap1, true, lastCap, promPieces[j]));
+                                moves.Add(new Move(i, i + cap1, true, lastCap, -1, promPieces[j]));
                             }
 
                         }
@@ -280,7 +280,7 @@ namespace KnightOwlBot
                             lastCap = board.board[i + cap2].Notation;
                             for (int j = 0; j < 4; j++)
                             {
-                                moves.Add(moveHelper(i, i + cap2, true, lastCap, promPieces[j]));
+                                moves.Add(new Move(i, i + cap2, true, lastCap, -1, promPieces[j]));
                             }
                         }
                         continue;
@@ -288,26 +288,24 @@ namespace KnightOwlBot
 
                     if (board.board[i + fw] == null) //move one forward
                     {
-                        moves.Add(moveHelper(i, i + fw, false, (byte)0, '\0'));
+                        moves.Add(new Move(i, i + fw));
 
                         if (i / 8 == start && board.board[i + fw * 2] == null) 
                         {
-                            Move move = moveHelper(i, i + fw * 2, false, (byte)0, '\0');
-                            move.EnPassentIndex = i + fw;
-                            moves.Add(move);
+                            moves.Add(new Move(i, i + fw * 2, false, 0, i + fw));
                         }
                     }
 
                     if (i % 8 != 0 && (board.board[i+cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove || (i + cap1 == board.EnPassentIndex && i / 8 != start))) //capture
                     {
                         lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : (byte)0;
-                        moves.Add(moveHelper(i, i + cap1, true, lastCap, '\0'));
+                        moves.Add(new Move(i, i + cap1, true, lastCap));
                     }
 
                     if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove || (i + cap2 == board.EnPassentIndex && i / 8 != start)))
                     {
                         lastCap = board.board[i + cap2] != null ? board.board[i + cap2].Notation : (byte)0;
-                        moves.Add(moveHelper(i, i + cap2, true, lastCap, '\0'));
+                        moves.Add(new Move(i, i + cap2, true, lastCap));
                     }
                     continue;
                 }
@@ -325,7 +323,7 @@ namespace KnightOwlBot
 
                         if (board.board[j] == null)
                         {
-                            moves.Add(moveHelper(i, j, false, (byte)0, '\0'));
+                            moves.Add(new Move(i, j));
 
                             if (board.board[i].IsSliding)
                             {
@@ -338,7 +336,7 @@ namespace KnightOwlBot
                         if (board.board[j].IsWhite != board.IsWhiteToMove)
                         {
                             lastCap = board.board[j].Notation;
-                            moves.Add(moveHelper(i, j, true, lastCap, '\0'));
+                            moves.Add(new Move(i, j, true, lastCap));
                         }
                         break;
                     }
@@ -533,25 +531,6 @@ namespace KnightOwlBot
             move.EnPassentIndex = EnPassentIndex;
 
             IsWhiteToMove = !IsWhiteToMove;
-        }
-
-        private static Move moveHelper(int index1, int index2, bool isCapture, byte lastCapture, char promPiece)
-        {
-            Move move = new()
-            {
-                Notation = LookupTables.indexToPos[index1] + LookupTables.indexToPos[index2],
-                Index1 = index1,
-                Index2 = index2,
-                IsCapture = isCapture,
-                LastCapture = lastCapture,
-            };
-            if (promPiece != '\0')
-            {
-                move.Notation += char.ToLower(promPiece);
-                move.PromPiece = promPiece;
-            }
-
-            return move;
         }
 
         public void PrintBoard()

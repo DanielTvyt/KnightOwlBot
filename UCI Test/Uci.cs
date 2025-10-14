@@ -130,13 +130,12 @@ namespace KnightOwlBot
                         ulong curNodes;
                         timer1.Start();
                         Move[] moves = Board.GetLegalMoves(board);
-                        int ply = 1;
                         if (i == 0)
                         {
                             foreach (var move in moves)
                             {
                                 nodes++;
-                                Console.WriteLine(move.Notation + ": 1");
+                                Console.WriteLine(move.GetNotation() + ": 1");
                             }
                             timer1.Stop();
                             Console.WriteLine("ply: " + (i + 1) + " Time " + timer1.ElapsedMilliseconds + " Nodes " + nodes + " knps " + nodes / ((ulong)timer1.ElapsedMilliseconds + 1));
@@ -145,7 +144,7 @@ namespace KnightOwlBot
                         for (int j = 0; j < moves.Length; j++)
                         {
                             board.DoMove(moves[j]);
-                            Console.Write(moves[j].Notation + ": ");
+                            Console.Write(moves[j].GetNotation() + ": ");
                             curNodes = Engine.Perft(board, i);
                             Console.WriteLine(curNodes);
                             nodes += curNodes;
@@ -187,15 +186,11 @@ namespace KnightOwlBot
 
                 for (int i = 0; i < moves.Length; i++)
                 {
-                    Move move = new()
+                    Move move = new((moves[i][0] - 'a') + (8 - (moves[i][1] - '0')) * 8, (moves[i][2] - 'a') + (8 - (moves[i][3] - '0')) * 8);
+
+                    if (moves[i].Length == 5)
                     {
-                        Notation = moves[i],
-                        Index1 = (moves[i][0] - 'a') + (8 - (moves[i][1] - '0')) * 8,
-                        Index2 = (moves[i][2] - 'a') + (8 - (moves[i][3] - '0')) * 8
-                    };
-                    if (move.Notation.Length == 5)
-                    {
-                        move.PromPiece = move.Notation[4];
+                        move.PromPiece = moves[i][4];
                         if (board.IsWhiteToMove)
                         {
                             move.PromPiece = char.ToUpper(move.PromPiece);
@@ -219,8 +214,8 @@ namespace KnightOwlBot
             long totalNodes = 0;
             int instances = 6;
             Console.WriteLine("Starting speedtest with " + instances + " Threads");
-            string exePath = "KnightOwlBot.exe"; // adjust path
-            string args = "speedtest "; // or whatever runs your internal benchmark
+            string exePath = AppDomain.CurrentDomain.FriendlyName;
+            string args = "speedtest ";
 
             var processes = new List<Process>();
 

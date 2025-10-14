@@ -34,7 +34,7 @@ namespace KnightOwlBot
             foreach (Move m in moves)
             {
                 board.DoMove(m);
-                Console.WriteLine(m.Notation + " Is Capture? " + m.IsCapture + " What Piece was Captured? " + m.LastCapture);
+                Console.WriteLine(m.GetNotation() + " Is Capture? " + m.IsCapture + " What Piece was Captured? " + m.LastCapture);
                 board.PrintBoard();
                 board.UndoMove(m);
             }

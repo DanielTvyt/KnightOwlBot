@@ -40,7 +40,7 @@ namespace KnightOwlBot
             watch.Start();
             nodes = 0;
             int score;
-            List<string> pv = [];
+            List<Move> pv = [];
             for (uint depth = 1; watch.ElapsedMilliseconds < searchTime || depth <= 1; depth++)
             {
                 int ply = 0;
@@ -59,7 +59,11 @@ namespace KnightOwlBot
                 long takenTime = watch.ElapsedMilliseconds == 0 ? 1 : watch.ElapsedMilliseconds;
                 while (pv.Remove(null)) { }
                 pv.Reverse();
-                string pvString = string.Join(" ", pv);
+                string pvString = "";
+                foreach (Move move in pv)
+                {
+                    pvString += move.GetNotation() + " ";
+                }
                 int selDepth = pv.Count;
                 string bestScore;
 
@@ -76,12 +80,12 @@ namespace KnightOwlBot
                 Console.WriteLine("info depth " + depth + " seldepth " + selDepth + " score " + bestScore + " nodes " + nodes + " nps " + Convert.ToUInt32(nodes / (decimal)takenTime * 1000) + " time " + takenTime + " pv " + pvString);
             }
             watch = new Stopwatch();
-            return pv[0];
+            return pv[0].GetNotation();
         }
 
-        private static (int, List<string>) Search(Board board, uint depth, int ply, int alpha, int beta)
+        private static (int, List<Move>) Search(Board board, uint depth, int ply, int alpha, int beta)
         {
-            List<string> pv = [];
+            List<Move> pv = [];
 
             if (depth == 0)
             {
@@ -104,8 +108,8 @@ namespace KnightOwlBot
                 return (0, pv);
             }
 
-            string bestMove = null;
-            List<string> bestPv = [];
+            Move bestMove = null;
+            List<Move> bestPv = [];
             moves = SortMoves(moves, board);
             int score;
 
@@ -131,7 +135,7 @@ namespace KnightOwlBot
                 }
                 if (score > alpha)
                 {
-                    bestMove = move.Notation;
+                    bestMove = move;
                     bestPv = pv;
                     alpha = score;
                 }
@@ -141,9 +145,9 @@ namespace KnightOwlBot
             return (alpha, bestPv);
         }
 
-        private static (int, List<string>) QuiescenceSearch(Board board, int ply, int alpha, int beta)
+        private static (int, List<Move>) QuiescenceSearch(Board board, int ply, int alpha, int beta)
         {
-            List<string> pv = [];
+            List<Move> pv = [];
             int standPat = Eval(board);
 
             if (standPat >= beta)
@@ -168,7 +172,7 @@ namespace KnightOwlBot
             moves = Array.FindAll(moves, m => m.IsCapture);
             moves = SortMoves(moves, board);
             int score;
-            string bestMove = null;
+            Move bestMove = null;
             foreach (Move move in moves)
             {
                 board.DoMove(move);
@@ -182,7 +186,7 @@ namespace KnightOwlBot
                 if (score > alpha)
                 {
                     alpha = score;
-                    bestMove = move.Notation;
+                    bestMove = move;
                 }
                 board.UndoMove(move);
             }
