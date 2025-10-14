@@ -8,12 +8,13 @@
         public int Material;
         public byte Notation;
 
+        private static readonly int[] bishop = [-9, -7, 7, 9];
+        private static readonly int[] rook = [-8, -1, 1, 8];
+        private static readonly int[] queen = [-9, -8, -7, -1, 1, 7, 8, 9];
+        private static readonly int[] knight = [-17, -15, -10, -6, 6, 10, 15, 17];
+
         public static Piece CreatePiece(char pieceIn)
         {
-            int[] bishop = [-9, -7, 7, 9];
-            int[] rook = [-8, -1, 1, 8];
-            int[] queen = [-9, -8, -7, -1, 1, 7, 8, 9];
-            int[] knight = [-17, -15, -10, -6, 6, 10, 15, 17];
             switch (pieceIn)
             {
                 case 'P':

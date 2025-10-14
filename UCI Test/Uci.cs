@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+
 
 namespace KnightOwlBot
 {
     internal class Uci
     {
-        public static void Listen()
-        { 
+        public static async Task Listen()
+        {
             string bestmove;
             string position = "position startpos";
             Board board = GetPos(position);
@@ -98,6 +102,10 @@ namespace KnightOwlBot
                 {
                     Console.WriteLine("readyok");
                 }
+                else if (UciIn == "quit")
+                {
+                    Environment.Exit(0);
+                }
                 else if (UciIn == "print")
                 {
                     board.PrintBoard();
@@ -138,7 +146,7 @@ namespace KnightOwlBot
                         {
                             board.DoMove(moves[j]);
                             Console.Write(moves[j].Notation + ": ");
-                            curNodes = Engine.Perft(board, i, ply + 1);
+                            curNodes = Engine.Perft(board, i);
                             Console.WriteLine(curNodes);
                             nodes += curNodes;
                             board.UndoMove(moves[j]);
@@ -147,9 +155,9 @@ namespace KnightOwlBot
                         Console.WriteLine("ply: " + (i + 1) + " Time " + timer1.ElapsedMilliseconds + " Nodes " + nodes + " knps " + nodes / ((ulong)timer1.ElapsedMilliseconds + 1));
                     }
                 }
-                else if (UciIn == "quit")
+                else if (UciIn == "speedtest")
                 {
-                    Environment.Exit(0);
+                    await speedtest();
                 }
             }
         }
@@ -203,6 +211,54 @@ namespace KnightOwlBot
                 }
             }
             return board;
+        }
+
+        private static async Task speedtest()
+        {
+            long totalTime = 0;
+            long totalNodes = 0;
+            int instances = 6;
+            Console.WriteLine("Starting speedtest with " + instances + " Threads");
+            string exePath = "KnightOwlBot.exe"; // adjust path
+            string args = "speedtest "; // or whatever runs your internal benchmark
+
+            var processes = new List<Process>();
+
+            for (int i = 0; i < instances; i++)
+            {
+                Console.WriteLine("Starting Thread " + i);
+                var p = new Process();
+                p.StartInfo.FileName = exePath;
+                p.StartInfo.Arguments = args + i;
+                p.StartInfo.UseShellExecute = false;
+                p.StartInfo.CreateNoWindow = true;
+                p.StartInfo.RedirectStandardOutput = true;
+
+                p.OutputDataReceived += (s, e) =>
+                {
+                    if (e.Data != null)
+                    {
+                        Console.WriteLine(e.Data);
+                        string[] strings = e.Data.Split(' ');
+                        try
+                        {
+                            totalTime += Convert.ToInt64(strings[3]);
+                            totalNodes += Convert.ToInt64(strings[5]);
+                        }
+                        catch { }
+                    }
+                };
+
+                p.Start();
+                p.BeginOutputReadLine();
+                processes.Add(p);
+            }
+
+            foreach (var p in processes)
+            {
+                p.WaitForExit();
+            }
+            Console.WriteLine($"Nodes {totalNodes} time {totalTime} nps {Math.Round(totalNodes / (decimal)totalTime * 1000)}");
         }
     }
 }

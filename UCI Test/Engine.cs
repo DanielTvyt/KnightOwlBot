@@ -12,7 +12,7 @@ namespace KnightOwlBot
         private static long maxTime;
         private static Stopwatch watch = new();
 
-        public static ulong Perft(Board board, int depth, int ply)
+        public static ulong Perft(Board board, int depth)
         {
             Move[] legalMoves = Board.GetLegalMoves(board);
             ulong leaves = 0;
@@ -24,7 +24,7 @@ namespace KnightOwlBot
             foreach (Move move in legalMoves)
             {
                 board.DoMove(move);
-                leaves += Perft(board, depth, ply + 1);
+                leaves += Perft(board, depth);
                 board.UndoMove(move);
             }
             return leaves;
