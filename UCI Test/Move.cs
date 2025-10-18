@@ -8,6 +8,7 @@
         public char PromPiece { get; set; }
         public byte LastCapture { get; set; }
         public int EnPassentIndex { get; set; }
+        public int PrevEnPassentIndex { get; set; }
         public int MoveValue { get; set; }
 
         private string Notation;
@@ -20,6 +21,7 @@
             this.PromPiece = promPiece;
             this.LastCapture = lastCapture;
             this.EnPassentIndex = enPassentIndex;
+            this.PrevEnPassentIndex = -1;
             this.MoveValue = 0;
             this.Notation = null;
         }

@@ -487,6 +487,8 @@ namespace KnightOwlBot
                 board[index2] = Piece.CreatePiece(move.PromPiece);
             }
 
+            // store previous en-passant index so it can be restored on undo
+            move.PrevEnPassentIndex = EnPassentIndex;
             EnPassentIndex = move.EnPassentIndex;
 
             if (move.IsCapture && move.LastCapture == 0)
@@ -523,13 +525,14 @@ namespace KnightOwlBot
                 }
             }
 
-            if (move.PromPiece != 0)
+            if (move.PromPiece != '\0')
             {
                 board[index2] = Piece.CreatePiece(IsWhiteToMove ? 'p' : 'P');
             }
 
-            move.EnPassentIndex = EnPassentIndex;
-
+            // restore previous en-passant index
+            EnPassentIndex = move.PrevEnPassentIndex;
+    
             IsWhiteToMove = !IsWhiteToMove;
         }
 
