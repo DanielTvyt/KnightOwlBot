@@ -5,25 +5,22 @@ namespace KnightOwlBot
 {
     internal class Board
     {
-        public Piece[] board { get; set; }
-        public List<int> ThreeFold { get; set; }
-        public bool IsWhiteToMove { get; set; }
-        public int EnPassentIndex {  get; set; }
-        public bool IsInCheck { get; set; }
-        public bool DoubleCheck { get; set; }
-        public int IndexOfCheckingPiece { get; set; }
-        public UInt64 BitboardAttacked { get; set; }
-        public UInt64 BitboardCheck { get; set; }
-        public List<UInt64> BitboardPinned {  get; set; }
+        public Piece[] board;
+        public List<int> ThreeFold;
+        public bool IsWhiteToMove;
+        public int EnPassentIndex;
+        public bool IsInCheck;
+        public bool DoubleCheck;
+        public int IndexOfCheckingPiece;
+        public UInt64 BitboardAttacked;
+        public UInt64 BitboardCheck;
+        public List<UInt64> BitboardPinned;
 
-        public static Board BuildFromFenString(string fenString)
+        public Board(string fenString)
         {
-            Board boardOut = new()
-            {
-                board = new Piece[64],
-                ThreeFold = [],
-                BitboardPinned = []
-            };
+            board = new Piece[64];
+            ThreeFold = [];
+            BitboardPinned = [];
             int y = 0;
 
             for (int i = 0; i < 64; i++)
@@ -42,10 +39,10 @@ namespace KnightOwlBot
                     y++;
                     continue;
                 }
-                boardOut.board[i] = Piece.CreatePiece(fenString[y]);
+                board[i] = new Piece(fenString[y]);
                 y++;
             }
-            boardOut.IsWhiteToMove = fenString[y + 1] == 'w';
+            IsWhiteToMove = fenString[y + 1] == 'w';
 
             for (int i = y + 3; i < fenString.Length; i++) //search for first space after w/b (skip castling rights)
             {
@@ -55,11 +52,10 @@ namespace KnightOwlBot
                     {
                         break;
                     }
-                    boardOut.EnPassentIndex = fenString[i + 1] - 96 + 64 - 8 * Convert.ToInt32(new string(fenString[i + 2], 1)) - 1;
+                    EnPassentIndex = fenString[i + 1] - 96 + 64 - 8 * Convert.ToInt32(new string(fenString[i + 2], 1)) - 1;
                     break;
                 }
             }
-            return boardOut;
         }
 
         private UInt64 GetBiboard()
@@ -237,7 +233,7 @@ namespace KnightOwlBot
         private static Move[] GetPseudoLegalMoves(Board board) 
         {
             List<Move> moves = [];
-            byte lastCap;
+            Piece lastCap;
 
             int fw = board.IsWhiteToMove ? -8 : 8;
             int cap1 = board.IsWhiteToMove ? -9 : 7;
@@ -261,26 +257,26 @@ namespace KnightOwlBot
                         {
                            for (int j = 0; j < 4; j++)
                            {
-                               moves.Add(new Move(i, i + fw, false, 0, -1, promPieces[j]));
+                               moves.Add(new Move(i, i + fw, false, null, 100, promPieces[j]));
                            }
                         }
 
                         if (i % 8 != 0 && (board.board[i + cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove)) //capture
                         {
-                            lastCap = board.board[i + cap1].Notation;
+                            lastCap = board.board[i + cap1];
                             for (int j = 0; j < 4; j++)
                             {
-                                moves.Add(new Move(i, i + cap1, true, lastCap, -1, promPieces[j]));
+                                moves.Add(new Move(i, i + cap1, true, lastCap, 100, promPieces[j]));
                             }
 
                         }
 
                         if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove))
                         {
-                            lastCap = board.board[i + cap2].Notation;
+                            lastCap = board.board[i + cap2];
                             for (int j = 0; j < 4; j++)
                             {
-                                moves.Add(new Move(i, i + cap2, true, lastCap, -1, promPieces[j]));
+                                moves.Add(new Move(i, i + cap2, true, lastCap, 100, promPieces[j]));
                             }
                         }
                         continue;
@@ -292,19 +288,19 @@ namespace KnightOwlBot
 
                         if (i / 8 == start && board.board[i + fw * 2] == null) 
                         {
-                            moves.Add(new Move(i, i + fw * 2, false, 0, i + fw));
+                            moves.Add(new Move(i, (byte)(i + fw * 2), false, null, i + fw));
                         }
                     }
 
                     if (i % 8 != 0 && (board.board[i+cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove || (i + cap1 == board.EnPassentIndex && i / 8 != start))) //capture
                     {
-                        lastCap = board.board[i + cap1] != null ? board.board[i + cap1].Notation : (byte)0;
+                        lastCap = board.board[i + cap1];
                         moves.Add(new Move(i, i + cap1, true, lastCap));
                     }
 
                     if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove || (i + cap2 == board.EnPassentIndex && i / 8 != start)))
                     {
-                        lastCap = board.board[i + cap2] != null ? board.board[i + cap2].Notation : (byte)0;
+                        lastCap = board.board[i + cap2];
                         moves.Add(new Move(i, i + cap2, true, lastCap));
                     }
                     continue;
@@ -335,7 +331,7 @@ namespace KnightOwlBot
 
                         if (board.board[j].IsWhite != board.IsWhiteToMove)
                         {
-                            lastCap = board.board[j].Notation;
+                            lastCap = board.board[j];
                             moves.Add(new Move(i, j, true, lastCap));
                         }
                         break;
@@ -392,7 +388,7 @@ namespace KnightOwlBot
                     }
                 }
 
-                if (m.IsCapture && m.LastCapture == 0) //en passent capture
+                if (m.IsCapture && m.LastCapture == null) //en passent capture
                 {
                     int indexOfCapturedPawn = !board.IsWhiteToMove ? m.Index2 + 8 : m.Index2 - 8;
                     foreach (var u in pinMasks) //chek if captured pawn was pinned
@@ -477,21 +473,21 @@ namespace KnightOwlBot
                     }
                     if (rookMove != 0)
                     {
-                        board[rookMove] = Piece.CreatePiece(rook);
+                        board[rookMove] = new Piece(rook);
                     }
                 }
             }
 
             if (move.PromPiece != 0)
             {
-                board[index2] = Piece.CreatePiece(move.PromPiece);
+                board[index2] = new Piece(move.PromPiece);
             }
 
             // store previous en-passant index so it can be restored on undo
             move.PrevEnPassentIndex = EnPassentIndex;
             EnPassentIndex = move.EnPassentIndex;
 
-            if (move.IsCapture && move.LastCapture == 0)
+            if (move.IsCapture && move.LastCapture == null)
             {
                 if(IsWhiteToMove)
                 {
@@ -514,20 +510,20 @@ namespace KnightOwlBot
             board[index1] = null;
             if (move.IsCapture)
             {
-                if (move.LastCapture != 0)
+                if (move.LastCapture != null)
                 {
-                    board[index1] = Piece.CreatePiece(Piece.byteToChar(move.LastCapture));
+                    board[index1] = move.LastCapture;
                 }
                 else
                 {
                     int pawnIndex = IsWhiteToMove ? index1 - 8 : index1 + 8;
-                    board[pawnIndex] = Piece.CreatePiece(board[index2].IsWhite ? 'p' : 'P');
+                    board[pawnIndex] = new Piece(board[index2].IsWhite ? 'p' : 'P');
                 }
             }
 
             if (move.PromPiece != '\0')
             {
-                board[index2] = Piece.CreatePiece(IsWhiteToMove ? 'p' : 'P');
+                board[index2] = new Piece(IsWhiteToMove ? 'p' : 'P');
             }
 
             // restore previous en-passant index

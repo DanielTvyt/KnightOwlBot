@@ -8,7 +8,7 @@ namespace KnightOwlBot
 {
     internal class Uci
     {
-        public static async Task Listen()
+        public static Task Listen()
         {
             string bestmove;
             string position = "position startpos";
@@ -156,7 +156,7 @@ namespace KnightOwlBot
                 }
                 else if (UciIn == "speedtest")
                 {
-                    await speedtest();
+                    speedtest();
                 }
             }
         }
@@ -164,7 +164,7 @@ namespace KnightOwlBot
 
         public static Board GetPos(string uciIn)
         {
-            Board board = Board.BuildFromFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            Board board = new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
             if (uciIn == "position startpos")
             {
                 return board;
@@ -177,7 +177,7 @@ namespace KnightOwlBot
                 {
                     fenString = fenString.Remove(fenString.IndexOf("moves") - 1, fenString.Length - fenString.IndexOf("moves") + 1);
                 }
-                board = Board.BuildFromFenString(fenString);
+                board = new Board(fenString);
             }
             if (uciIn.Contains("moves"))
             {
@@ -186,7 +186,7 @@ namespace KnightOwlBot
 
                 for (int i = 0; i < moves.Length; i++)
                 {
-                    Move move = new((moves[i][0] - 'a') + (8 - (moves[i][1] - '0')) * 8, (moves[i][2] - 'a') + (8 - (moves[i][3] - '0')) * 8);
+                    Move move = new((byte)((moves[i][0] - 'a') + (8 - (moves[i][1] - '0')) * 8), (byte)((moves[i][2] - 'a') + (8 - (moves[i][3] - '0')) * 8));
 
                     if (moves[i].Length == 5)
                     {
@@ -199,7 +199,7 @@ namespace KnightOwlBot
                     if (board.board[move.Index1].Notation is 1 or 7 && (move.Index1 - move.Index2) % 8 != 0 && board.board[move.Index2] == null)
                     {
                         move.IsCapture = true; //en passent capture
-                        move.LastCapture = 0;
+                        move.LastCapture = null;
                     }
 
                     board.DoMove(move);
