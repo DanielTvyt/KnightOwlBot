@@ -8,7 +8,7 @@ namespace KnightOwlBot
         static void Main(string[] args)
         {
             //Warm up
-            Board board = Board.BuildFromFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            Board board = new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
             Board.GetLegalMoves(board);
             board.GetHashCode();
             board = null;
@@ -17,51 +17,17 @@ namespace KnightOwlBot
             {
                 speedtest(args[1]);
             }
-            while (true)
-            {
-                Uci.Listen();
-            }
 
-            //startpos rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
-
-            board.PrintBoard();
-
-            Move[] moves = Board.GetLegalMoves(board);
-
-            Board.PrintBitboard(board.BitboardAttacked);
-
-            Console.WriteLine("Nodes: " + moves.Length);
-            foreach (Move m in moves)
-            {
-                board.DoMove(m);
-                Console.WriteLine(m.GetNotation() + " Is Capture? " + m.IsCapture + " What Piece was Captured? " + m.LastCapture);
-                board.PrintBoard();
-                board.UndoMove(m);
-            }
-            
-            Console.ReadLine();
-            
-            
-            var timer = System.Diagnostics.Stopwatch.StartNew();
-            timer.Start();
-            for (int i = 1; i <= 5000000; i++)
-            {
-                //Board.DoMove(move, boards[0]);
-            }
-            timer.Stop();
-            Console.WriteLine("Time: " + timer.ElapsedMilliseconds);
-            
-            //Board.PrintBoard(board1);
-            Console.ReadLine();
+            Uci.Listen();
         }
 
         public static void speedtest(string id)
         {
             // Each thread builds its own independent boards
-            var b1 = Board.BuildFromFenString("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-            var b2 = Board.BuildFromFenString("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
-            var b3 = Board.BuildFromFenString("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
-            var b4 = Board.BuildFromFenString("5k2/1B6/8/2p5/8/2K1n2p/5p2/8 b - - 1 57");
+            var b1 = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            var b2 = new Board("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
+            var b3 = new Board("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
+            var b4 = new Board("5k2/1B6/8/2p5/8/2K1n2p/5p2/8 b - - 1 57");
 
             ulong nodes = 0;
             var timer = Stopwatch.StartNew();

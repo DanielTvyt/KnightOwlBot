@@ -2,18 +2,18 @@
 {
     internal class Move
     {
-        public int Index1 { get; set; }
-        public int Index2 { get; set; }
-        public bool IsCapture { get; set; }
-        public char PromPiece { get; set; }
-        public byte LastCapture { get; set; }
-        public int EnPassentIndex { get; set; }
-        public int PrevEnPassentIndex { get; set; }
-        public int MoveValue { get; set; }
+        public int Index1;
+        public int Index2;
+        public bool IsCapture;
+        public char PromPiece;
+        public Piece LastCapture;
+        public int EnPassentIndex;
+        public int PrevEnPassentIndex = 100;
+        public int MoveValue = 0;
 
-        private string Notation;
+        private string Notation = null;
 
-        public Move(int index1, int index2, bool isCapture = false, byte lastCapture = 0, int enPassentIndex = -1, char promPiece = '\0')
+        public Move(int index1, int index2, bool isCapture = false, Piece lastCapture = null, int enPassentIndex = 100, char promPiece = '\0')
         {
             this.Index1 = index1;
             this.Index2 = index2;
@@ -21,9 +21,6 @@
             this.PromPiece = promPiece;
             this.LastCapture = lastCapture;
             this.EnPassentIndex = enPassentIndex;
-            this.PrevEnPassentIndex = -1;
-            this.MoveValue = 0;
-            this.Notation = null;
         }
 
         public string GetNotation()
