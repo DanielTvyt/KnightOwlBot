@@ -251,6 +251,7 @@ namespace KnightOwlBot
 
             int castleK = board.IsWhiteToMove ? 0 : 2;
             int castleQ = board.IsWhiteToMove ? 1 : 3;
+            board.CalculateCastlingRights();
 
             int fw = board.IsWhiteToMove ? -8 : 8;
             int cap1 = board.IsWhiteToMove ? -9 : 7;
@@ -559,8 +560,6 @@ namespace KnightOwlBot
                 board[index2].hasMoved = true;
             }
             IsWhiteToMove = !IsWhiteToMove;
-
-            CalculateCastlingRights();
         }
 
         public void UndoMove(Move move)
@@ -623,7 +622,6 @@ namespace KnightOwlBot
             EnPassentIndex = move.PrevEnPassentIndex;
     
             IsWhiteToMove = !IsWhiteToMove;
-            CalculateCastlingRights();
         }
 
         private void CalculateCastlingRights()
@@ -654,7 +652,6 @@ namespace KnightOwlBot
             }
         }
 
-
         public void PrintBoard()
         {
             for (int i = 0; i < board.Length; i++)
@@ -671,6 +668,7 @@ namespace KnightOwlBot
                 }
                 Console.Write(Piece.byteToChar(board[i].Notation) + " ");
             }
+            CalculateCastlingRights();
             Console.Write("\nKQkq ");
             foreach (var right in CastlingRights)
             {
