@@ -10,6 +10,8 @@
         public int EnPassentIndex;
         public int PrevEnPassentIndex = 100;
         public int MoveValue = 0;
+        public bool IsFirstMove = false;
+        public bool IsCastleMove = false;
 
         private string Notation = null;
 

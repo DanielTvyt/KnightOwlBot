@@ -15,12 +15,14 @@ namespace KnightOwlBot
         public UInt64 BitboardAttacked;
         public UInt64 BitboardCheck;
         public List<UInt64> BitboardPinned;
+        public bool[] CastlingRights;
 
         public Board(string fenString)
         {
             board = new Piece[64];
             ThreeFold = [];
             BitboardPinned = [];
+            CastlingRights = [false, false, false, false]; //KQkq
             int y = 0;
 
             for (int i = 0; i < 64; i++)
@@ -44,17 +46,29 @@ namespace KnightOwlBot
             }
             IsWhiteToMove = fenString[y + 1] == 'w';
 
-            for (int i = y + 3; i < fenString.Length; i++) //search for first space after w/b (skip castling rights)
+            for (int i = y + 3; fenString[i] != ' '; i++)
             {
-                if (fenString[i] == ' ')
+                y = i;
+                switch (fenString[i])
                 {
-                    if (fenString[i + 1] == '-')
-                    {
+                    case 'K':
+                        CastlingRights[0] = true;
                         break;
-                    }
-                    EnPassentIndex = fenString[i + 1] - 96 + 64 - 8 * Convert.ToInt32(new string(fenString[i + 2], 1)) - 1;
-                    break;
+                    case 'Q':
+                        CastlingRights[1] = true;
+                        break;
+                    case 'k':
+                        CastlingRights[2] = true;
+                        break;
+                    case 'q':
+                        CastlingRights[3] = true;
+                        break;
                 }
+            }
+            if (fenString[y + 2] != '-')
+            {
+                Console.WriteLine(fenString[y + 2] + " " + fenString[y + 3]);
+                EnPassentIndex = fenString[y + 2] - 96 + 64 - 8 * Convert.ToInt32(new string(fenString[y + 3], 1)) - 1;
             }
         }
 
@@ -235,6 +249,9 @@ namespace KnightOwlBot
             List<Move> moves = [];
             Piece lastCap;
 
+            int castleK = board.IsWhiteToMove ? 0 : 2;
+            int castleQ = board.IsWhiteToMove ? 1 : 3;
+
             int fw = board.IsWhiteToMove ? -8 : 8;
             int cap1 = board.IsWhiteToMove ? -9 : 7;
             int cap2 = board.IsWhiteToMove ? -7 : 9;
@@ -306,6 +323,21 @@ namespace KnightOwlBot
                     continue;
                 }
 
+                if (board.board[i].Notation is 6 or 12) //K or k
+                {
+                    //Castling
+                    if (board.CastlingRights[castleK] && board.board[i + 1] == null && board.board[i + 2] == null)
+                    {
+                        Move m = new(i, i + 2) { IsCastleMove = true };
+                        moves.Add(m);
+                    }
+                    if (board.CastlingRights[castleQ] && board.board[i - 1] == null && board.board[i - 2] == null && board.board[i - 3] == null)
+                    {
+                        Move m = new(i, i - 2) { IsCastleMove = true };
+                        moves.Add(m);
+                    }
+                }
+
                 for (int k = 0; k < board.board[i].MoveDelta.Length; k++)
                 {
                     int lastJ = i;
@@ -368,6 +400,28 @@ namespace KnightOwlBot
                 UInt64 kingMask = curKingMask;
                 if (doubleCheck && board.board[m.Index1].Notation is not 6 and not 12) //only king moves allowed
                 {
+                    continue;
+                }
+
+                if (m.IsCastleMove)
+                {
+                    if (isInCheck)
+                    {
+                        continue;
+                    }
+                    UInt64 castleMask;
+                    if (m.Index2 > m.Index1) //king side
+                    {
+                        castleMask = (1UL << (m.Index1 + 1)) | (1UL << (m.Index1 + 2));
+                    }
+                    else //queen side
+                    {
+                        castleMask = (1UL << (m.Index1 - 1)) | (1UL << (m.Index1 - 2));
+                    }
+                    if ((castleMask & bitboard) == 0)
+                    {
+                        legalMoves.Add(m);
+                    }
                     continue;
                 }
 
@@ -474,6 +528,7 @@ namespace KnightOwlBot
                     if (rookMove != 0)
                     {
                         board[rookMove] = new Piece(rook);
+                        move.IsCastleMove = true;
                     }
                 }
             }
@@ -498,7 +553,14 @@ namespace KnightOwlBot
                     board[index2 - 8] = null;
                 }
             }
+            if (!board[index2].hasMoved)
+            {
+                move.IsFirstMove = true;
+                board[index2].hasMoved = true;
+            }
             IsWhiteToMove = !IsWhiteToMove;
+
+            CalculateCastlingRights();
         }
 
         public void UndoMove(Move move)
@@ -526,11 +588,72 @@ namespace KnightOwlBot
                 board[index2] = new Piece(IsWhiteToMove ? 'p' : 'P');
             }
 
+            if (move.IsFirstMove)
+            {
+                board[index2].hasMoved = false;
+            }
+
+            if (move.IsCastleMove)
+            {
+                int rookStart, rookEnd;
+                if (index1 > index2) //king side
+                {
+                    rookStart = !IsWhiteToMove ? 63 : 7;
+                    rookEnd = index1 - 1;
+                    //Console.WriteLine("King side - rookStart: " + rookStart + " rookEnd " + rookEnd);
+                }
+                else //queen side
+                {
+                    rookStart = !IsWhiteToMove ? 56 : 0;
+                    rookEnd = index1 + 1;
+                    //Console.WriteLine("Queen side - rookStart: " + rookStart + " rookEnd " + rookEnd);
+                }
+                board[rookStart] = board[rookEnd];
+                if (board[rookStart] == null)
+                {
+                    PrintBoard();
+                    throw new Exception("Error in undoing castling move");
+                }
+                board[rookStart].hasMoved = false;
+
+                board[rookEnd] = null;
+            }
+
             // restore previous en-passant index
             EnPassentIndex = move.PrevEnPassentIndex;
     
             IsWhiteToMove = !IsWhiteToMove;
+            CalculateCastlingRights();
         }
+
+        private void CalculateCastlingRights()
+        {
+            CastlingRights = [true, true, true, true];
+
+            if (board[60] != null && board[60].Notation == 6 && !board[60].hasMoved)
+            {
+                CastlingRights[0] = board[63] != null && board[63].Notation == 4 && !board[63].hasMoved; //white king side
+
+                CastlingRights[1] = board[56] != null && board[56].Notation == 4 && !board[56].hasMoved; //white queen side
+            }
+            else
+            {
+                CastlingRights[0] = false;
+                CastlingRights[1] = false;
+            }
+            if (board[4] != null && board[4].Notation == 12 && !board[4].hasMoved)
+            {
+                CastlingRights[2] = board[7] != null && board[7].Notation == 10 && !board[7].hasMoved; //black king side
+
+                CastlingRights[3] = board[0] != null && board[0].Notation == 10 && !board[0].hasMoved; //black queen side
+            }
+            else
+            {
+                CastlingRights[2] = false;
+                CastlingRights[3] = false;
+            }
+        }
+
 
         public void PrintBoard()
         {
@@ -547,6 +670,11 @@ namespace KnightOwlBot
                     continue;
                 }
                 Console.Write(Piece.byteToChar(board[i].Notation) + " ");
+            }
+            Console.Write("\nKQkq ");
+            foreach (var right in CastlingRights)
+            {
+                Console.Write(right + " ");
             }
             Console.WriteLine(" \n");
         }

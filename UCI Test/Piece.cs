@@ -7,13 +7,14 @@
         public bool IsSliding;
         public int Material;
         public byte Notation;
+        public bool hasMoved = false;
 
         private static readonly int[] bishop = [-9, -7, 7, 9];
         private static readonly int[] rook = [-8, -1, 1, 8];
         private static readonly int[] queen = [-9, -8, -7, -1, 1, 7, 8, 9];
         private static readonly int[] knight = [-17, -15, -10, -6, 6, 10, 15, 17];
 
-        public  Piece(char pieceIn)
+        public Piece(char pieceIn)
         {
             switch (pieceIn)
             {
@@ -25,80 +26,80 @@
                     return;
                 case 'N':
                     IsWhite = true;
-                        Material = 300;
-                        IsSliding = false;
-                        MoveDelta = knight;
-                        Notation = 2;
+                    Material = 300;
+                    IsSliding = false;
+                    MoveDelta = knight;
+                    Notation = 2;
                     return;
                 case 'B':
-                        IsWhite = true;
-                        Material = 300;
-                        IsSliding = true;
-                        MoveDelta = bishop;
-                        Notation = 3;
+                    IsWhite = true;
+                    Material = 300;
+                    IsSliding = true;
+                    MoveDelta = bishop;
+                    Notation = 3;
                     return;
                 case 'R':
-                        IsWhite = true;
-                        Material = 500;
-                        IsSliding = true;
-                        MoveDelta = rook;
-                        Notation = 4;
+                    IsWhite = true;
+                    Material = 500;
+                    IsSliding = true;
+                    MoveDelta = rook;
+                    Notation = 4;
                     return;
                 case 'Q':
                     IsWhite = true;
-                        Material = 900;
-                        IsSliding = true;
-                        MoveDelta = queen;
-                        Notation = 5;
+                    Material = 900;
+                    IsSliding = true;
+                    MoveDelta = queen;
+                    Notation = 5;
                     return;
                 case 'K':
-                        IsWhite = true;
-                        Material = 0;
-                        IsSliding = false;
-                        MoveDelta = queen;
-                        Notation = 6;
+                    IsWhite = true;
+                    Material = 0;
+                    IsSliding = false;
+                    MoveDelta = queen;
+                    Notation = 6;
                     return;
 
                 case 'p':
                     IsWhite = false;
-                        Material = -100;
-                        IsSliding = false;
-                        Notation = 7;
+                    Material = -100;
+                    IsSliding = false;
+                    Notation = 7;
                     return;
                 case 'n':
-                        IsWhite = false;
-                        Material = -300;
-                        IsSliding = false;
-                        MoveDelta = knight;
-                        Notation = 8;
+                    IsWhite = false;
+                    Material = -300;
+                    IsSliding = false;
+                    MoveDelta = knight;
+                    Notation = 8;
                     return;
                 case 'b':
-                        IsWhite = false;
-                        Material = -300;
-                        IsSliding = true;
-                        MoveDelta = bishop;
-                        Notation = 9;
+                    IsWhite = false;
+                    Material = -300;
+                    IsSliding = true;
+                    MoveDelta = bishop;
+                    Notation = 9;
                     return;
                 case 'r':
-                        IsWhite = false;
-                        Material = -500;
-                        IsSliding = true;
-                        MoveDelta = rook;
-                        Notation = 10;
+                    IsWhite = false;
+                    Material = -500;
+                    IsSliding = true;
+                    MoveDelta = rook;
+                    Notation = 10;
                     return;
                 case 'q':
-                        IsWhite = false;
-                        Material = -900;
-                        IsSliding = true;
-                        MoveDelta = queen;
-                        Notation = 11;
+                    IsWhite = false;
+                    Material = -900;
+                    IsSliding = true;
+                    MoveDelta = queen;
+                    Notation = 11;
                     return;
                 case 'k':
-                        IsWhite = false;
-                        Material = 0;
-                        IsSliding = false;
-                        MoveDelta = queen;
-                        Notation = 12;
+                    IsWhite = false;
+                    Material = 0;
+                    IsSliding = false;
+                    MoveDelta = queen;
+                    Notation = 12;
                     return;
             }
         }
