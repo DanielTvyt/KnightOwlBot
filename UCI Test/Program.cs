@@ -23,15 +23,13 @@ namespace KnightOwlBot
 
         public static void speedtest(string id)
         {
-            // Each thread builds its own independent boards
             var b1 = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
             var b2 = new Board("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");
-            var b3 = new Board("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
-            var b4 = new Board("5k2/1B6/8/2p5/8/2K1n2p/5p2/8 b - - 1 57");
+            var b3 = new Board("r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1");
+            var b4 = new Board("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ");
 
             ulong nodes = 0;
             var timer = Stopwatch.StartNew();
-
             ulong curNodes;
             bool first = true;
 
@@ -48,13 +46,13 @@ namespace KnightOwlBot
                     Console.WriteLine($"[Thread {id}] Error in perft b2");
                 nodes += curNodes;
 
-                curNodes = Engine.Perft(b3, 5); //~20s
-                if (curNodes != 164075551)
+                curNodes = Engine.Perft(b3, 6); //~30s
+                if (curNodes != 706045033)
                     Console.WriteLine($"[Thread {id}] Error in perft b3");
                 nodes += curNodes;
 
-                curNodes = Engine.Perft(b4, 7); //~30s
-                if (curNodes != 302573451)
+                curNodes = Engine.Perft(b4, 5); //~8s
+                if (curNodes != 193690690)
                     Console.WriteLine($"[Thread {id}] Error in perft b4");
                 nodes += curNodes;
             }
