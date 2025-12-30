@@ -199,6 +199,8 @@ namespace KnightOwlBot
             nodes++;
 
             int Material = 0;
+            float openingRatio = board.pieceCount * 0.05f;
+            float endgameRatio = 1.0f - openingRatio;
 
             for (int i = 0; i < board.board.Length; i++)
             {
@@ -211,41 +213,41 @@ namespace KnightOwlBot
                 switch (piece.Notation)
                 {
                     case 1:
-                        Material += PST.pawn[i];
+                        Material += Convert.ToInt32((PST.pawn[i] * openingRatio) + (PST.egPawn[i] * endgameRatio));
                         break;
                     case 2:
-                        Material += PST.knight[i];
+                        Material += Convert.ToInt32((PST.knight[i] * openingRatio) + (PST.egKnight[i] * endgameRatio));
                         break;
                     case 3:
-                        Material += PST.bishop[i];
+                        Material += Convert.ToInt32((PST.bishop[i] * openingRatio) + (PST.egBishop[i] * endgameRatio));
                         break;
                     case 4:
-                        Material += PST.rook[i];
+                        Material += Convert.ToInt32((PST.rook[i] * openingRatio) + (PST.egRook[i] * endgameRatio));
                         break;
                     case 5:
-                        Material += PST.queen[i];
+                        Material += Convert.ToInt32((PST.queen[i] * openingRatio) + (PST.egQueen[i] * endgameRatio));
                         break;
                     case 6:
-                        Material += PST.king[i];
+                        Material += Convert.ToInt32((PST.king[i] * openingRatio) + (PST.egking[i] * endgameRatio));
                         break;
 
                     case 7:
-                        Material -= PST.pawn[63 - i];
+                        Material -= Convert.ToInt32((PST.pawn[63 - i] * openingRatio) + (PST.egPawn[63 - i] * endgameRatio));
                         break;
                     case 8:
-                        Material -= PST.knight[63 - i];
+                        Material -= Convert.ToInt32((PST.knight[63 - i] * openingRatio) + (PST.egKnight[63 - i] * endgameRatio));
                         break;
                     case 9:
-                        Material -= PST.bishop[63 - i];
+                        Material -= Convert.ToInt32((PST.bishop[63 - i] * openingRatio) + (PST.egBishop[63 - i] * endgameRatio));
                         break;
                     case 10:
-                        Material -= PST.rook[63 - i];
+                        Material -= Convert.ToInt32((PST.rook[63 - i] * openingRatio) + (PST.egRook[63 - i] * endgameRatio));
                         break;
                     case 11:
-                        Material -= PST.queen[63 - i];
+                        Material -= Convert.ToInt32((PST.queen[63 - i] * openingRatio) + (PST.egQueen[63 - i] * endgameRatio));
                         break;
                     case 12:
-                        Material -= PST.king[63 - i];
+                        Material -= Convert.ToInt32((PST.king[63 - i] * openingRatio) + (PST.egking[63 - i] * endgameRatio));
                         break;
                 }
                 Material += piece.Material;

@@ -201,6 +201,11 @@ namespace KnightOwlBot
                         move.IsCapture = true; //en passent capture
                         move.LastCapture = null;
                     }
+                    if (board.board[move.Index2] != null)
+                    {
+                        move.IsCapture = true;
+                        move.LastCapture = board.board[move.Index2];
+                    }
 
                     board.DoMove(move);
                 }

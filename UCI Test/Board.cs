@@ -16,6 +16,7 @@ namespace KnightOwlBot
         public UInt64 BitboardCheck;
         public List<UInt64> BitboardPinned;
         public bool[] CastlingRights;
+        public int pieceCount;
 
         public Board(string fenString)
         {
@@ -42,6 +43,7 @@ namespace KnightOwlBot
                     continue;
                 }
                 board[i] = new Piece(fenString[y]);
+                pieceCount++;
                 y++;
             }
             IsWhiteToMove = fenString[y + 1] == 'w';
@@ -543,15 +545,19 @@ namespace KnightOwlBot
             move.PrevEnPassentIndex = EnPassentIndex;
             EnPassentIndex = move.EnPassentIndex;
 
-            if (move.IsCapture && move.LastCapture == null)
+            if (move.IsCapture)
             {
-                if(IsWhiteToMove)
+                pieceCount--;
+                if (move.LastCapture == null)
                 {
-                    board[index2 + 8] = null;
-                }
-                else
-                {
-                    board[index2 - 8] = null;
+                    if (IsWhiteToMove)
+                    {
+                        board[index2 + 8] = null;
+                    }
+                    else
+                    {
+                        board[index2 - 8] = null;
+                    }
                 }
             }
             if (!board[index2].hasMoved)
@@ -569,8 +575,10 @@ namespace KnightOwlBot
 
             board[index2] = board[index1];
             board[index1] = null;
+
             if (move.IsCapture)
             {
+                pieceCount++;
                 if (move.LastCapture != null)
                 {
                     board[index1] = move.LastCapture;
