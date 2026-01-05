@@ -198,62 +198,61 @@ namespace KnightOwlBot
         {
             nodes++;
 
-            int Material = 0;
-            float openingRatio = board.pieceCount * 0.05f;
-            float endgameRatio = 1.0f - openingRatio;
+            int score = 0;
+            int pstScore = 0;
+            int openingRatio = board.pieceCount * 5;
+            int endgameRatio = 100 - openingRatio;
 
-            for (int i = 0; i < board.board.Length; i++)
+            for (int i = 0; i < 64; i++)
             {
                 Piece piece = board.board[i];
-                if (piece == null)
-                {
-                    continue;
-                }
+                if (piece == null) continue;
+
+                score += piece.Material;
 
                 switch (piece.Notation)
                 {
                     case 1:
-                        Material += Convert.ToInt32((PST.pawn[i] * openingRatio) + (PST.egPawn[i] * endgameRatio));
+                        pstScore += (PST.pawn[i] * openingRatio) + (PST.egPawn[i] * endgameRatio);
                         break;
                     case 2:
-                        Material += Convert.ToInt32((PST.knight[i] * openingRatio) + (PST.egKnight[i] * endgameRatio));
+                        pstScore += (PST.knight[i] * openingRatio) + (PST.egKnight[i] * endgameRatio);
                         break;
                     case 3:
-                        Material += Convert.ToInt32((PST.bishop[i] * openingRatio) + (PST.egBishop[i] * endgameRatio));
+                        pstScore += (PST.bishop[i] * openingRatio) + (PST.egBishop[i] * endgameRatio);
                         break;
                     case 4:
-                        Material += Convert.ToInt32((PST.rook[i] * openingRatio) + (PST.egRook[i] * endgameRatio));
+                        pstScore += (PST.rook[i] * openingRatio) + (PST.egRook[i] * endgameRatio);
                         break;
                     case 5:
-                        Material += Convert.ToInt32((PST.queen[i] * openingRatio) + (PST.egQueen[i] * endgameRatio));
+                        pstScore += (PST.queen[i] * openingRatio) + (PST.egQueen[i] * endgameRatio);
                         break;
                     case 6:
-                        Material += Convert.ToInt32((PST.king[i] * openingRatio) + (PST.egking[i] * endgameRatio));
+                        pstScore += (PST.king[i] * openingRatio) + (PST.egking[i] * endgameRatio);
                         break;
 
                     case 7:
-                        Material -= Convert.ToInt32((PST.pawn[63 - i] * openingRatio) + (PST.egPawn[63 - i] * endgameRatio));
+                        pstScore -= (PST.pawn[63 - i] * openingRatio) + (PST.egPawn[63 - i] * endgameRatio);
                         break;
                     case 8:
-                        Material -= Convert.ToInt32((PST.knight[63 - i] * openingRatio) + (PST.egKnight[63 - i] * endgameRatio));
+                        pstScore -= (PST.knight[63 - i] * openingRatio) + (PST.egKnight[63 - i] * endgameRatio);
                         break;
                     case 9:
-                        Material -= Convert.ToInt32((PST.bishop[63 - i] * openingRatio) + (PST.egBishop[63 - i] * endgameRatio));
+                        pstScore -= (PST.bishop[63 - i] * openingRatio) + (PST.egBishop[63 - i] * endgameRatio);
                         break;
                     case 10:
-                        Material -= Convert.ToInt32((PST.rook[63 - i] * openingRatio) + (PST.egRook[63 - i] * endgameRatio));
+                        pstScore -= (PST.rook[63 - i] * openingRatio) + (PST.egRook[63 - i] * endgameRatio);
                         break;
                     case 11:
-                        Material -= Convert.ToInt32((PST.queen[63 - i] * openingRatio) + (PST.egQueen[63 - i] * endgameRatio));
+                        pstScore -= (PST.queen[63 - i] * openingRatio) + (PST.egQueen[63 - i] * endgameRatio);
                         break;
                     case 12:
-                        Material -= Convert.ToInt32((PST.king[63 - i] * openingRatio) + (PST.egking[63 - i] * endgameRatio));
+                        pstScore -= (PST.king[63 - i] * openingRatio) + (PST.egking[63 - i] * endgameRatio);
                         break;
                 }
-                Material += piece.Material;
             }
-            int perspective = board.IsWhiteToMove ? 1 : -1;
-            return Material * perspective;
+            score += pstScore / 100;
+            return board.IsWhiteToMove ? score : -score;
         }
 
         private static Move[] SortMoves(Move[] moves, Board board)
