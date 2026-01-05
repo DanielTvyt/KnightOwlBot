@@ -8,7 +8,6 @@ namespace KnightOwlBot
     {
         private const int INF = int.MaxValue - 1;
         private static uint nodes = 0;
-        private static uint maxDepth;
         private static long maxTime;
         private static Stopwatch watch = new();
 
@@ -39,48 +38,73 @@ namespace KnightOwlBot
             maxTime = (time + inc) / 10;
             watch.Start();
             nodes = 0;
-            int score;
-            List<Move> pv = [];
+            int score = 0;
+            List<Move> pv;
+            List<Move> bestPv = [];
+            Move bestMove = null;
+            Move[] moves = Board.GetLegalMoves(board);
+                
+            if (moves.Length == 0) return "0000";
+
             for (uint depth = 1; watch.ElapsedMilliseconds < searchTime || depth <= 1; depth++)
             {
                 int ply = 0;
-                maxDepth = depth;
                 int alpha = -INF;
                 int beta  =  INF;
-                try
+
+                moves = SortMoves(moves, board, false);
+
+                foreach (Move move in moves)
                 {
-                    (score, pv) = Search(board, depth, ply + 1, alpha, beta);
-                }
-                catch
-                {
-                    continue;
+                    board.DoMove(move);
+
+                    (score, pv) = Search(board, depth - 1, ply + 1, -beta, -alpha);
+                    score *= -1;
+
+                    move.MoveValue = score;
+
+                    if (score > alpha)
+                    {
+                        bestMove = move;
+                        bestPv = pv;
+                        alpha = score;
+                        move.MoveValue = 1000 + Math.Abs(alpha * 1000); //Search best move first next iteration
+                    }
+                    board.UndoMove(move);
+
+                    if (watch.ElapsedMilliseconds >= maxTime && depth != 1)
+                    {
+                        break;
+                    }
                 }
 
-                long takenTime = watch.ElapsedMilliseconds == 0 ? 1 : watch.ElapsedMilliseconds;
-                while (pv.Remove(null)) { }
-                pv.Reverse();
+                bestPv.Add(bestMove);
+                while (bestPv.Remove(null)) { }
                 string pvString = "";
-                foreach (Move move in pv)
+                bestPv.Reverse();
+                foreach (Move move in bestPv)
                 {
                     pvString += move.GetNotation() + " ";
                 }
-                int selDepth = pv.Count;
+                int selDepth = bestPv.Count;
+
+                long takenTime = watch.ElapsedMilliseconds == 0 ? 1 : watch.ElapsedMilliseconds;
                 string bestScore;
 
-                if (Math.Abs(score) > INF - 1000) //checkmate
+                if (Math.Abs(alpha) > INF - 1000) //checkmate
                 {
                     string perspective = score > 0 ? "" : "-";
-                    bestScore = "mate " + perspective + (INF - Math.Abs(score)) / 2;
+                    bestScore = "mate " + perspective + (INF - Math.Abs(alpha)) / 2;
                 }
                 else
                 {
-                    bestScore = "cp " + score.ToString();
+                    bestScore = "cp " + alpha.ToString();
                 }
 
                 Console.WriteLine("info depth " + depth + " seldepth " + selDepth + " score " + bestScore + " nodes " + nodes + " nps " + Convert.ToUInt32(nodes / (decimal)takenTime * 1000) + " time " + takenTime + " pv " + pvString);
             }
             watch = new Stopwatch();
-            return pv[0].GetNotation();
+            return bestPv[0].GetNotation();
         }
 
         private static (int, List<Move>) Search(Board board, uint depth, int ply, int alpha, int beta)
@@ -90,11 +114,6 @@ namespace KnightOwlBot
             if (depth == 0)
             {
                 return (Eval(board), pv);
-            }
-
-            if (watch.ElapsedMilliseconds > maxTime && maxDepth > 1)
-            {
-                throw new Exception("0");
             }
 
             Move[] moves = Board.GetLegalMoves(board);
@@ -110,7 +129,7 @@ namespace KnightOwlBot
 
             Move bestMove = null;
             List<Move> bestPv = [];
-            moves = SortMoves(moves, board);
+            moves = SortMoves(moves, board, true);
             int score;
 
             foreach (Move move in moves)
@@ -170,7 +189,7 @@ namespace KnightOwlBot
             }
 
             moves = Array.FindAll(moves, m => m.IsCapture);
-            moves = SortMoves(moves, board);
+            moves = SortMoves(moves, board, true);
             int score;
             Move bestMove = null;
             foreach (Move move in moves)
@@ -255,43 +274,46 @@ namespace KnightOwlBot
             return board.IsWhiteToMove ? score : -score;
         }
 
-        private static Move[] SortMoves(Move[] moves, Board board)
+        private static Move[] SortMoves(Move[] moves, Board board, bool isSearch)
         {
-            foreach (Move move in moves)
+            if (isSearch)
             {
-                if (move.IsCapture)
+                foreach (Move move in moves)
                 {
-                    Piece capturedPiece = board.board[move.Index2];
-                    if (capturedPiece != null)
+                    if (move.IsCapture)
                     {
-                        move.MoveValue = Math.Abs(capturedPiece.Material * 10) - Math.Abs(board.board[move.Index1].Material);
+                        Piece capturedPiece = board.board[move.Index2];
+                        if (capturedPiece != null)
+                        {
+                            move.MoveValue = Math.Abs(capturedPiece.Material * 10) - Math.Abs(board.board[move.Index1].Material);
+                        }
+                        else
+                        {
+                            move.MoveValue = 900; //en passent capture value
+                        }
+                    }
+                    else if (move.PromPiece != '\0')
+                    {
+                        switch (move.PromPiece)
+                        {
+                            case 'Q' or 'q':
+                                move.MoveValue = 8000;
+                                break;
+                            case 'R' or 'r':
+                                move.MoveValue = 4000;
+                                break;
+                            case 'B' or 'b':
+                                move.MoveValue = 3000;
+                                break;
+                            case 'N' or 'n':
+                                move.MoveValue = 2000;
+                                break;
+                        }
                     }
                     else
                     {
-                        move.MoveValue = 900; //en passent capture value
+                        move.MoveValue = 0;
                     }
-                }
-                else if (move.PromPiece != '\0')
-                {
-                    switch (move.PromPiece)
-                    {
-                        case 'Q' or 'q':
-                            move.MoveValue = 8000;
-                            break;
-                        case 'R' or 'r':
-                            move.MoveValue = 4000;
-                            break;
-                        case 'B' or 'b':
-                            move.MoveValue = 3000;
-                            break;
-                        case 'N' or 'n':
-                            move.MoveValue = 2000;
-                            break;
-                    }
-                }
-                else
-                {
-                    move.MoveValue = 0;
                 }
             }
 
