@@ -10,18 +10,17 @@ namespace KnightOwlBot
             //Warm up
             Board board = new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
             Board.GetLegalMoves(board);
-            board.GetHashCode();
             board = null;
 
             if (args.Length > 0 && args[0] == "speedtest")
             {
-                speedtest(args[1]);
+                Speedtest(args[1]);
             }
 
             Uci.Listen();
         }
 
-        public static void speedtest(string id)
+        private static void Speedtest(string id)
         {
             var b1 = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
             var b2 = new Board("8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1");

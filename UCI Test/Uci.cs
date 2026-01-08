@@ -115,7 +115,8 @@ namespace KnightOwlBot
                     int depth;
                     try
                     {
-                        depth = Convert.ToInt32(UciIn[6].ToString()) - 1;
+                        string inDepth = UciIn.Remove(0, 6);
+                        depth = Convert.ToInt32(inDepth.ToString()) - 1;
                         Console.WriteLine(depth + 1);
                     }
                     catch

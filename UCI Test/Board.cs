@@ -18,6 +18,8 @@ namespace KnightOwlBot
         public bool[] CastlingRights;
         public int pieceCount;
 
+        public ZobristHashing zobrist = new();
+
         public Board(string fenString)
         {
             board = new Piece[64];
@@ -72,6 +74,7 @@ namespace KnightOwlBot
                 Console.WriteLine(fenString[y + 2] + " " + fenString[y + 3]);
                 EnPassentIndex = fenString[y + 2] - 96 + 64 - 8 * Convert.ToInt32(new string(fenString[y + 3], 1)) - 1;
             }
+            zobrist.InitializeHash(this);
         }
 
         private UInt64 GetBiboard()
@@ -494,43 +497,46 @@ namespace KnightOwlBot
             board[index2] = board[index1];
             board[index1] = null;
 
+            byte pieceNotation = board[index2].Notation;
+
             if (board[index2].Material == 0)
             {
                 if (index1 == 60 || index1 == 4)
                 {
                     int rookMove = 0;
-                    char rook;
+                    int rookPos = 0;
                     if (IsWhiteToMove)
                     {
-                        rook = 'R';
                         if (index2 == 62)
                         {
-                            board[63] = null;
                             rookMove = 61;
+                            rookPos = 63;
                         }
                         else if (index2 == 58)
                         {
-                            board[56] = null;
                             rookMove = 59;
+                            rookPos = 56;
                         }
                     }
                     else
                     {
-                        rook = 'r';
                         if(index2 == 6)
                         {
-                            board[7] = null;
                             rookMove = 5;
+                            rookPos = 7;
                         }
                         else if (index2 == 2)
                         {
-                            board[0] = null;
                             rookMove = 3;
+                            rookPos = 0;
                         }
                     }
                     if (rookMove != 0)
                     {
-                        board[rookMove] = new Piece(rook);
+                        board[rookMove] = board[rookPos];
+                        board[rookPos] = null;
+                        zobrist.UpdateHash(board[rookMove].Notation, rookMove);
+                        zobrist.UpdateHash(board[rookMove].Notation, rookPos);
                         move.IsCastleMove = true;
                     }
                 }
@@ -550,14 +556,13 @@ namespace KnightOwlBot
                 pieceCount--;
                 if (move.LastCapture == null)
                 {
-                    if (IsWhiteToMove)
-                    {
-                        board[index2 + 8] = null;
-                    }
-                    else
-                    {
-                        board[index2 - 8] = null;
-                    }
+                    int pawnIndex = IsWhiteToMove ? index2 + 8 : index2 - 8;
+                    zobrist.UpdateHash(board[pawnIndex].Notation, pawnIndex);
+                    board[pawnIndex] = null;
+                }
+                else
+                {
+                    zobrist.UpdateHash(move.LastCapture.Notation, move.Index2);
                 }
             }
             if (!board[index2].hasMoved)
@@ -566,6 +571,14 @@ namespace KnightOwlBot
                 board[index2].hasMoved = true;
             }
             IsWhiteToMove = !IsWhiteToMove;
+
+            zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.EnPassentFileIndex] + (ulong)(move.PrevEnPassentIndex % 8) * 12;
+            zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.EnPassentFileIndex] + (ulong)(EnPassentIndex % 8) * 12;
+
+            zobrist.UpdateHash(board[index2].Notation, index2);
+            zobrist.UpdateHash(pieceNotation, index1);
+
+            zobrist.HashValue ^= ZobristHashing.IsWhiteIndex;
         }
 
         public void UndoMove(Move move)
@@ -576,17 +589,21 @@ namespace KnightOwlBot
             board[index2] = board[index1];
             board[index1] = null;
 
+            byte pieceNotation = board[index2].Notation;
+
             if (move.IsCapture)
             {
                 pieceCount++;
                 if (move.LastCapture != null)
                 {
                     board[index1] = move.LastCapture;
+                    zobrist.UpdateHash(board[index1].Notation, index1);
                 }
                 else
                 {
                     int pawnIndex = IsWhiteToMove ? index1 - 8 : index1 + 8;
                     board[pawnIndex] = new Piece(board[index2].IsWhite ? 'p' : 'P');
+                    zobrist.UpdateHash(board[pawnIndex].Notation, pawnIndex);
                 }
             }
 
@@ -607,33 +624,42 @@ namespace KnightOwlBot
                 {
                     rookStart = !IsWhiteToMove ? 63 : 7;
                     rookEnd = index1 - 1;
-                    //Console.WriteLine("King side - rookStart: " + rookStart + " rookEnd " + rookEnd);
                 }
                 else //queen side
                 {
                     rookStart = !IsWhiteToMove ? 56 : 0;
                     rookEnd = index1 + 1;
-                    //Console.WriteLine("Queen side - rookStart: " + rookStart + " rookEnd " + rookEnd);
                 }
                 board[rookStart] = board[rookEnd];
-                if (board[rookStart] == null)
-                {
-                    PrintBoard();
-                    throw new Exception("Error in undoing castling move");
-                }
-                board[rookStart].hasMoved = false;
-
                 board[rookEnd] = null;
+                board[rookStart].hasMoved = false;
+                zobrist.UpdateHash(board[rookStart].Notation, rookStart);
+                zobrist.UpdateHash(board[rookStart].Notation, rookEnd);
             }
 
             // restore previous en-passant index
             EnPassentIndex = move.PrevEnPassentIndex;
-    
             IsWhiteToMove = !IsWhiteToMove;
+
+            zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.EnPassentFileIndex] + (ulong) (move.EnPassentIndex % 8) * 12;
+            zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.EnPassentFileIndex] + (ulong) (EnPassentIndex % 8) * 12;
+
+            zobrist.UpdateHash(board[index2].Notation, index2);
+            zobrist.UpdateHash(pieceNotation, index1);
+
+            zobrist.HashValue ^= ZobristHashing.IsWhiteIndex;
         }
 
         private void CalculateCastlingRights()
         {
+            for (int i = 0; i < 4; i++)
+            {
+                if (CastlingRights[i])
+                {
+                    zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.CastlingIndex + i * 12];
+                }
+            }
+
             CastlingRights = [true, true, true, true];
 
             if (board[60] != null && board[60].Notation == 6 && !board[60].hasMoved)
@@ -657,6 +683,14 @@ namespace KnightOwlBot
             {
                 CastlingRights[2] = false;
                 CastlingRights[3] = false;
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                if (CastlingRights[i])
+                {
+                    zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.CastlingIndex + i * 12];
+                }
             }
         }
 
@@ -682,7 +716,7 @@ namespace KnightOwlBot
             {
                 Console.Write(right + " ");
             }
-            Console.WriteLine(" \n");
+            Console.WriteLine(" \n" + "Hash: " + zobrist.HashValue + "\n");
         }
 
         public static void PrintBitboard(UInt64 bitboard)
