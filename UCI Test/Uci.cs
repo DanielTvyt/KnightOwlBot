@@ -90,7 +90,7 @@ namespace KnightOwlBot
                     {
                         time = uint.MaxValue;
                     }
-                    bestmove = Engine.Run(board, time, inc);
+                    bestmove = Engine.Start.Run(board, time, inc);
                     Console.WriteLine("bestmove " + bestmove);
                 }
                 else if (UciIn == "uci")
@@ -126,7 +126,7 @@ namespace KnightOwlBot
                     }
                     for (int i = 0; i <= depth; i++)
                     {
-                        var timer1 = System.Diagnostics.Stopwatch.StartNew();
+                        var timer1 = Stopwatch.StartNew();
                         ulong nodes = 0;
                         ulong curNodes;
                         timer1.Start();
@@ -146,7 +146,7 @@ namespace KnightOwlBot
                         {
                             board.DoMove(moves[j]);
                             Console.Write(moves[j].GetNotation() + ": ");
-                            curNodes = Engine.Perft(board, i);
+                            curNodes = Engine.Start.Perft(board, i);
                             Console.WriteLine(curNodes);
                             nodes += curNodes;
                             board.UndoMove(moves[j]);
@@ -197,7 +197,7 @@ namespace KnightOwlBot
                             move.PromPiece = char.ToUpper(move.PromPiece);
                         }
                     }
-                    if (board.board[move.Index1].Notation is 1 or 7 && (move.Index1 - move.Index2) % 8 != 0 && board.board[move.Index2] == null)
+                    if (board.board[move.Index1].Notation is Piece.P or Piece.p && (move.Index1 - move.Index2) % 8 != 0 && board.board[move.Index2] == null)
                     {
                         move.IsCapture = true; //en passent capture
                         move.LastCapture = null;

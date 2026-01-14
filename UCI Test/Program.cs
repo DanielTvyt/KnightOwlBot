@@ -35,22 +35,22 @@ namespace KnightOwlBot
             while (first)
             {
                 first = false;
-                curNodes = Engine.Perft(b1, 6); //~15s
+                curNodes = Engine.Start.Perft(b1, 6); //~15s
                 if (curNodes != 119060324)
                     Console.WriteLine($"[Thread {id}] Error in perft startpos");
                 nodes += curNodes;
 
-                curNodes = Engine.Perft(b2, 7); //~25s
+                curNodes = Engine.Start.Perft(b2, 7); //~25s
                 if (curNodes != 178633661)
                     Console.WriteLine($"[Thread {id}] Error in perft b2");
                 nodes += curNodes;
 
-                curNodes = Engine.Perft(b3, 6); //~30s
+                curNodes = Engine.Start.Perft(b3, 6); //~30s
                 if (curNodes != 706045033)
                     Console.WriteLine($"[Thread {id}] Error in perft b3");
                 nodes += curNodes;
 
-                curNodes = Engine.Perft(b4, 5); //~8s
+                curNodes = Engine.Start.Perft(b4, 5); //~8s
                 if (curNodes != 193690690)
                     Console.WriteLine($"[Thread {id}] Error in perft b4");
                 nodes += curNodes;

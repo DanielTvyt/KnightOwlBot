@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace KnightOwlBot
 {
     internal class Board
     {
         public Piece[] board;
-        public List<int> ThreeFold;
         public bool IsWhiteToMove;
         public int EnPassentIndex;
         public bool IsInCheck;
@@ -23,7 +23,6 @@ namespace KnightOwlBot
         public Board(string fenString)
         {
             board = new Piece[64];
-            ThreeFold = [];
             BitboardPinned = [];
             CastlingRights = [false, false, false, false]; //KQkq
             int y = 0;
@@ -89,7 +88,7 @@ namespace KnightOwlBot
             int cap1 = IsWhiteToMove ? -9 : 7;
             int cap2 = IsWhiteToMove ? -7 : 9;
 
-            byte opponentKing = IsWhiteToMove ? (byte)12 : (byte)6;
+            byte opponentKing = IsWhiteToMove ? Piece.k : Piece.K;
 
             for (int i = 0; i < 64; i++)
             {
@@ -98,7 +97,7 @@ namespace KnightOwlBot
                     continue;
                 }
 
-                if (board[i].Notation is 1 or 7) //P or p
+                if (board[i].Notation is Piece.P or Piece.p) //P or p
                 {
                     if (i % 8 != 0) //capture
                     {
@@ -203,7 +202,7 @@ namespace KnightOwlBot
         {
             UInt64 pinMask = 0;
             bool encounteredFirstPiece = false;
-            byte opponentKing = board.IsWhiteToMove ? (byte)12 : (byte)6;
+            byte opponentKing = board.IsWhiteToMove ? Piece.k : Piece.K;
 
             if (!isInCheck)
             {
@@ -271,7 +270,7 @@ namespace KnightOwlBot
                     continue;
                 }
 
-                if (board.board[i].Notation is 1 or 7) //P or p
+                if (board.board[i].Notation is Piece.P or Piece.p) //P or p
                 {
                     if ((i + fw) / 8 == prom) //Promotion
                     {
@@ -329,7 +328,7 @@ namespace KnightOwlBot
                     continue;
                 }
 
-                if (board.board[i].Notation is 6 or 12) //K or k
+                if (board.board[i].Notation is Piece.K or Piece.k) //K or k
                 {
                     //Castling
                     if (board.CastlingRights[castleK] && board.board[i + 1] == null && board.board[i + 2] == null)
@@ -390,7 +389,7 @@ namespace KnightOwlBot
             UInt64 curKingMask = 0;
             bool isInCheck = board.IsInCheck;
             bool doubleCheck = board.DoubleCheck;
-            byte kingNotation = board.IsWhiteToMove ? (byte)6 : (byte)12;
+            byte kingNotation = board.IsWhiteToMove ? Piece.K : Piece.k;
 
             for (int i = 0; i < 64; i++)
             {
@@ -404,7 +403,7 @@ namespace KnightOwlBot
             foreach (Move m in moves)
             {
                 UInt64 kingMask = curKingMask;
-                if (doubleCheck && board.board[m.Index1].Notation is not 6 and not 12) //only king moves allowed
+                if (doubleCheck && board.board[m.Index1].Notation is not Piece.K and not Piece.k) //only king moves allowed
                 {
                     continue;
                 }
@@ -578,7 +577,7 @@ namespace KnightOwlBot
             zobrist.UpdateHash(board[index2].Notation, index2);
             zobrist.UpdateHash(pieceNotation, index1);
 
-            zobrist.HashValue ^= ZobristHashing.IsWhiteIndex;
+            zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.IsWhiteIndex];
         }
 
         public void UndoMove(Move move)
@@ -647,10 +646,10 @@ namespace KnightOwlBot
             zobrist.UpdateHash(board[index2].Notation, index2);
             zobrist.UpdateHash(pieceNotation, index1);
 
-            zobrist.HashValue ^= ZobristHashing.IsWhiteIndex;
+            zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.IsWhiteIndex];
         }
 
-        private void CalculateCastlingRights()
+        public void CalculateCastlingRights()
         {
             for (int i = 0; i < 4; i++)
             {
@@ -662,22 +661,22 @@ namespace KnightOwlBot
 
             CastlingRights = [true, true, true, true];
 
-            if (board[60] != null && board[60].Notation == 6 && !board[60].hasMoved)
+            if (board[60] != null && board[60].Notation == Piece.K && !board[60].hasMoved)
             {
-                CastlingRights[0] = board[63] != null && board[63].Notation == 4 && !board[63].hasMoved; //white king side
+                CastlingRights[0] = board[63] != null && board[63].Notation == Piece.R && !board[63].hasMoved; //white king side
 
-                CastlingRights[1] = board[56] != null && board[56].Notation == 4 && !board[56].hasMoved; //white queen side
+                CastlingRights[1] = board[56] != null && board[56].Notation == Piece.R && !board[56].hasMoved; //white queen side
             }
             else
             {
                 CastlingRights[0] = false;
                 CastlingRights[1] = false;
             }
-            if (board[4] != null && board[4].Notation == 12 && !board[4].hasMoved)
+            if (board[4] != null && board[4].Notation == Piece.k && !board[4].hasMoved)
             {
-                CastlingRights[2] = board[7] != null && board[7].Notation == 10 && !board[7].hasMoved; //black king side
+                CastlingRights[2] = board[7] != null && board[7].Notation == Piece.r && !board[7].hasMoved; //black king side
 
-                CastlingRights[3] = board[0] != null && board[0].Notation == 10 && !board[0].hasMoved; //black queen side
+                CastlingRights[3] = board[0] != null && board[0].Notation == Piece.r && !board[0].hasMoved; //black queen side
             }
             else
             {
@@ -692,6 +691,26 @@ namespace KnightOwlBot
                     zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.CastlingIndex + i * 12];
                 }
             }
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (var piece in board)
+            {
+                if (piece == null)
+                {
+                    sb.Append("-");
+                    continue;
+                }
+                sb.Append(Piece.byteToChar(piece.Notation));
+            }
+            foreach (var right in CastlingRights)
+            {
+                sb.Append(right ? "1" : "0");
+            }
+            sb.Append(IsWhiteToMove ? "w" : "b");
+            return sb.ToString();
         }
 
         public void PrintBoard()

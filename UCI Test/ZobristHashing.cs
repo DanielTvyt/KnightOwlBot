@@ -56,7 +56,7 @@ namespace KnightOwlBot
 
         public void UpdateHash(int pieceNotation, int squareIndex)
         {
-            HashValue ^= TABLE[(pieceNotation - 1) + squareIndex * 12];
+            HashValue ^= TABLE[pieceNotation + squareIndex * 12];
         }
 
         public static UInt64 NextUInt64(Random rng)

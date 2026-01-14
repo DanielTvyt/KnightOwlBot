@@ -71,7 +71,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Board.cs" />
-    <Compile Include="Engine.cs" />
+    <Compile Include="Engine\Evaluation.cs" />
+    <Compile Include="Engine\Search.cs" />
+    <Compile Include="Engine\Start.cs" />
     <Compile Include="LookUpTables.cs" />
     <Compile Include="Move.cs" />
     <Compile Include="Piece.cs" />
@@ -96,5 +98,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

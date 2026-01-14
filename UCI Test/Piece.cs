@@ -9,6 +9,19 @@
         public byte Notation;
         public bool hasMoved = false;
 
+        public const byte P = 0;
+        public const byte N = 1;
+        public const byte B = 2;
+        public const byte R = 3;
+        public const byte Q = 4;
+        public const byte K = 5;
+        public const byte p = 6;
+        public const byte n = 7;
+        public const byte b = 8;
+        public const byte r = 9;
+        public const byte q = 10;
+        public const byte k = 11;
+
         private static readonly int[] bishop = [-9, -7, 7, 9];
         private static readonly int[] rook = [-8, -1, 1, 8];
         private static readonly int[] queen = [-9, -8, -7, -1, 1, 7, 8, 9];
@@ -22,104 +35,104 @@
                     IsWhite = true;
                     Material = 100;
                     IsSliding = false;
-                    Notation = 1;
+                    Notation = P;
                     return;
                 case 'N':
                     IsWhite = true;
                     Material = 300;
                     IsSliding = false;
                     MoveDelta = knight;
-                    Notation = 2;
+                    Notation = N;
                     return;
                 case 'B':
                     IsWhite = true;
                     Material = 300;
                     IsSliding = true;
                     MoveDelta = bishop;
-                    Notation = 3;
+                    Notation = B;
                     return;
                 case 'R':
                     IsWhite = true;
                     Material = 500;
                     IsSliding = true;
                     MoveDelta = rook;
-                    Notation = 4;
+                    Notation = R;
                     return;
                 case 'Q':
                     IsWhite = true;
                     Material = 900;
                     IsSliding = true;
                     MoveDelta = queen;
-                    Notation = 5;
+                    Notation = Q;
                     return;
                 case 'K':
                     IsWhite = true;
                     Material = 0;
                     IsSliding = false;
                     MoveDelta = queen;
-                    Notation = 6;
+                    Notation = K;
                     return;
 
                 case 'p':
                     IsWhite = false;
                     Material = -100;
                     IsSliding = false;
-                    Notation = 7;
+                    Notation = p;
                     return;
                 case 'n':
                     IsWhite = false;
                     Material = -300;
                     IsSliding = false;
                     MoveDelta = knight;
-                    Notation = 8;
+                    Notation = n;
                     return;
                 case 'b':
                     IsWhite = false;
                     Material = -300;
                     IsSliding = true;
                     MoveDelta = bishop;
-                    Notation = 9;
+                    Notation = b;
                     return;
                 case 'r':
                     IsWhite = false;
                     Material = -500;
                     IsSliding = true;
                     MoveDelta = rook;
-                    Notation = 10;
+                    Notation = r;
                     return;
                 case 'q':
                     IsWhite = false;
                     Material = -900;
                     IsSliding = true;
                     MoveDelta = queen;
-                    Notation = 11;
+                    Notation = q;
                     return;
                 case 'k':
                     IsWhite = false;
                     Material = 0;
                     IsSliding = false;
                     MoveDelta = queen;
-                    Notation = 12;
+                    Notation = k;
                     return;
             }
         }
 
-        public static char byteToChar(byte b)
+        public static char byteToChar(byte input)
         {
-            return b switch
+            return input switch
             {
-                1 => 'P',
-                2 => 'N',
-                3 => 'B',
-                4 => 'R',
-                5 => 'Q',
-                6 => 'K',
-                7 => 'p',
-                8 => 'n',
-                9 => 'b',
-                10 => 'r',
-                11 => 'q',
-                12 => 'k',
+                P => 'P',
+                N => 'N',
+                B => 'B',
+                R => 'R',
+                Q => 'Q',
+                K => 'K',
+                p => 'p',
+                n => 'n',
+                b => 'b',
+                r => 'r',
+                q => 'q',
+                k => 'k',
                 _ => ' ',
             };
         }
