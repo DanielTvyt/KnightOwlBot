@@ -46,7 +46,7 @@
                     return;
                 case 'B':
                     IsWhite = true;
-                    Material = 300;
+                    Material = 350;
                     IsSliding = true;
                     MoveDelta = bishop;
                     Notation = B;
@@ -88,7 +88,7 @@
                     return;
                 case 'b':
                     IsWhite = false;
-                    Material = -300;
+                    Material = -350;
                     IsSliding = true;
                     MoveDelta = bishop;
                     Notation = b;
