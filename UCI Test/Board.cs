@@ -6,6 +6,9 @@ namespace KnightOwlBot
 {
     internal class Board
     {
+        private const int MAXLEGALMOVES = 213;
+        private Move[] moves = new Move[MAXLEGALMOVES];
+
         public Piece[] board;
         public bool IsWhiteToMove;
         public int EnPassentIndex;
@@ -248,105 +251,105 @@ namespace KnightOwlBot
             return;
         }
 
-        private static Move[] GetPseudoLegalMoves(Board board) 
+        private void GetPseudoLegalMoves() 
         {
-            List<Move> moves = [];
+            int moveCount = 0;
             Piece lastCap;
 
-            int castleK = board.IsWhiteToMove ? 0 : 2;
-            int castleQ = board.IsWhiteToMove ? 1 : 3;
-            board.CalculateCastlingRights();
+            int castleK = IsWhiteToMove ? 0 : 2;
+            int castleQ = IsWhiteToMove ? 1 : 3;
+            CalculateCastlingRights();
 
-            int fw = board.IsWhiteToMove ? -8 : 8;
-            int cap1 = board.IsWhiteToMove ? -9 : 7;
-            int cap2 = board.IsWhiteToMove ? -7 : 9;
-            int start = board.IsWhiteToMove ? 6 : 1; // start row
-            int prom = board.IsWhiteToMove ? 0 : 7;
+            int fw = IsWhiteToMove ? -8 : 8;
+            int cap1 = IsWhiteToMove ? -9 : 7;
+            int cap2 = IsWhiteToMove ? -7 : 9;
+            int start = IsWhiteToMove ? 6 : 1; // start row
+            int prom = IsWhiteToMove ? 0 : 7;
 
             for (int i = 0; i < 64; i++)
             {
-                if (board.board[i] == null || board.board[i].IsWhite != board.IsWhiteToMove)
+                if (board[i] == null || board[i].IsWhite != IsWhiteToMove)
                 {
                     continue;
                 }
 
-                if (board.board[i].Notation is Piece.P or Piece.p) //P or p
+                if (board[i].Notation is Piece.P or Piece.p) //P or p
                 {
                     if ((i + fw) / 8 == prom) //Promotion
                     {
-                        char[] promPieces = board.IsWhiteToMove ? ['Q', 'R', 'B', 'N'] : ['q', 'r', 'b', 'n'];
-                        if (board.board[i + fw] == null)
+                        char[] promPieces = IsWhiteToMove ? ['Q', 'R', 'B', 'N'] : ['q', 'r', 'b', 'n'];
+                        if (board[i + fw] == null)
                         {
                            for (int j = 0; j < 4; j++)
                            {
-                               moves.Add(new Move(i, i + fw, false, null, 100, promPieces[j]));
+                               moves[moveCount++] = new Move(i, i + fw, false, null, 100, promPieces[j]);
                            }
                         }
 
-                        if (i % 8 != 0 && (board.board[i + cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove)) //capture
+                        if (i % 8 != 0 && (board[i + cap1] != null && board[i + cap1].IsWhite != IsWhiteToMove)) //capture
                         {
-                            lastCap = board.board[i + cap1];
+                            lastCap = board[i + cap1];
                             for (int j = 0; j < 4; j++)
                             {
-                                moves.Add(new Move(i, i + cap1, true, lastCap, 100, promPieces[j]));
+                                moves[moveCount++] = new Move(i, i + cap1, true, lastCap, 100, promPieces[j]);
                             }
 
                         }
 
-                        if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove))
+                        if (i % 8 != 7 && (board[i + cap2] != null && board[i + cap2].IsWhite != IsWhiteToMove))
                         {
-                            lastCap = board.board[i + cap2];
+                            lastCap = board[i + cap2];
                             for (int j = 0; j < 4; j++)
                             {
-                                moves.Add(new Move(i, i + cap2, true, lastCap, 100, promPieces[j]));
+                                moves[moveCount++] = new Move(i, i + cap2, true, lastCap, 100, promPieces[j]);
                             }
                         }
                         continue;
                     }
 
-                    if (board.board[i + fw] == null) //move one forward
+                    if (board[i + fw] == null) //move one forward
                     {
-                        moves.Add(new Move(i, i + fw));
+                        moves[moveCount++] = new Move(i, i + fw);
 
-                        if (i / 8 == start && board.board[i + fw * 2] == null) 
+                        if (i / 8 == start && board[i + fw * 2] == null) 
                         {
-                            moves.Add(new Move(i, (byte)(i + fw * 2), false, null, i + fw));
+                            moves[moveCount++] = new Move(i, (byte)(i + fw * 2), false, null, i + fw);
                         }
                     }
 
-                    if (i % 8 != 0 && (board.board[i+cap1] != null && board.board[i + cap1].IsWhite != board.IsWhiteToMove || (i + cap1 == board.EnPassentIndex && i / 8 != start))) //capture
+                    if (i % 8 != 0 && (board[i+cap1] != null && board[i + cap1].IsWhite != IsWhiteToMove || (i + cap1 == EnPassentIndex && i / 8 != start))) //capture
                     {
-                        lastCap = board.board[i + cap1];
-                        moves.Add(new Move(i, i + cap1, true, lastCap));
+                        lastCap = board[i + cap1];
+                        moves[moveCount++] = new Move(i, i + cap1, true, lastCap);
                     }
 
-                    if (i % 8 != 7 && (board.board[i + cap2] != null && board.board[i + cap2].IsWhite != board.IsWhiteToMove || (i + cap2 == board.EnPassentIndex && i / 8 != start)))
+                    if (i % 8 != 7 && (board[i + cap2] != null && board[i + cap2].IsWhite != IsWhiteToMove || (i + cap2 == EnPassentIndex && i / 8 != start)))
                     {
-                        lastCap = board.board[i + cap2];
-                        moves.Add(new Move(i, i + cap2, true, lastCap));
+                        lastCap = board[i + cap2];
+                        moves[moveCount++] = new Move(i, i + cap2, true, lastCap);
                     }
                     continue;
                 }
 
-                if (board.board[i].Notation is Piece.K or Piece.k) //K or k
+                if (board[i].Notation is Piece.K or Piece.k) //K or k
                 {
                     //Castling
-                    if (board.CastlingRights[castleK] && board.board[i + 1] == null && board.board[i + 2] == null)
+                    if (CastlingRights[castleK] && board[i + 1] == null && board[i + 2] == null)
                     {
                         Move m = new(i, i + 2) { IsCastleMove = true };
-                        moves.Add(m);
+                        moves[moveCount++] = m;
                     }
-                    if (board.CastlingRights[castleQ] && board.board[i - 1] == null && board.board[i - 2] == null && board.board[i - 3] == null)
+                    if (CastlingRights[castleQ] && board[i - 1] == null && board[i - 2] == null && board[i - 3] == null)
                     {
                         Move m = new(i, i - 2) { IsCastleMove = true };
-                        moves.Add(m);
+                        moves[moveCount++] = m;
                     }
                 }
 
-                for (int k = 0; k < board.board[i].MoveDelta.Length; k++)
+                for (int k = 0; k < board[i].MoveDelta.Length; k++)
                 {
                     int lastJ = i;
-                    int moveDelta = board.board[i].MoveDelta[k];
+                    int moveDelta = board[i].MoveDelta[k];
                     for (int j = i + moveDelta; j < 64 && j >= 0; j += moveDelta)
                     {
                         if (j % 8 == 0 && lastJ % 8 == 7 || j % 8 == 7 && lastJ % 8 == 0 || i % 8 < 2 && moveDelta is -10 or 6 || i % 8 > 5 && moveDelta is 10 or -6) //detect board edge
@@ -354,11 +357,11 @@ namespace KnightOwlBot
                             break;
                         }
 
-                        if (board.board[j] == null)
+                        if (board[j] == null)
                         {
-                            moves.Add(new Move(i, j));
+                            moves[moveCount++] = new Move(i, j);
 
-                            if (board.board[i].IsSliding)
+                            if (board[i].IsSliding)
                             {
                                 lastJ = j;
                                 continue;
@@ -366,21 +369,21 @@ namespace KnightOwlBot
                             break;
                         }
 
-                        if (board.board[j].IsWhite != board.IsWhiteToMove)
+                        if (board[j].IsWhite != IsWhiteToMove)
                         {
-                            lastCap = board.board[j];
-                            moves.Add(new Move(i, j, true, lastCap));
+                            lastCap = board[j];
+                            moves[moveCount++] = new Move(i, j, true, lastCap);
                         }
                         break;
                     }
                 }
             }
-            return [.. moves];
+            moves[moveCount] = null; //end marker
         }
 
         public static Move[] GetLegalMoves(Board board)
         {
-            Move[] moves = GetPseudoLegalMoves(board);
+            board.GetPseudoLegalMoves();
             List<Move> legalMoves = [];
             UInt64 bitboard = board.GetBiboard();
             int indexOfCheckingPiece = board.IndexOfCheckingPiece;
@@ -400,8 +403,12 @@ namespace KnightOwlBot
                 }
             }
 
-            foreach (Move m in moves)
+            foreach (Move m in board.moves)
             {
+                if (m == null)
+                {
+                    break;
+                }
                 UInt64 kingMask = curKingMask;
                 if (doubleCheck && board.board[m.Index1].Notation is not Piece.K and not Piece.k) //only king moves allowed
                 {

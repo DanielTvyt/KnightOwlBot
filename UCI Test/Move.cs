@@ -13,8 +13,6 @@
         public bool IsFirstMove = false;
         public bool IsCastleMove = false;
 
-        private string Notation = null;
-
         public Move(int index1, int index2, bool isCapture = false, Piece lastCapture = null, int enPassentIndex = 100, char promPiece = '\0')
         {
             this.Index1 = index1;
@@ -27,17 +25,12 @@
 
         public string GetNotation()
         {
-            if (this.Notation != null)
-            {
-                return this.Notation;
-            }
             string moveNotation = LookupTables.indexToPos[Index1] + LookupTables.indexToPos[Index2];
             if (PromPiece != '\0')
             {
                 moveNotation += char.ToLower(PromPiece);
             }
-            this.Notation = moveNotation;
-            return this.Notation;
+            return moveNotation;
         }
     }
 }
