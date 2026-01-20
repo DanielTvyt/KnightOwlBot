@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,21 +10,29 @@ namespace KnightOwlBot
 {
     internal class ZobristHashing
     {
-        public static readonly ulong[] TABLE = new ulong[768]; // 12 pieces * 64 squares
+        public static readonly ulong[][] TABLE; // 64 squares * 12 pieces
         //pawns cant be on first or last rank so we save 16 entries
-        public const int IsWhiteIndex       = 000; // 1 entry
-        public const int CastlingIndex      = 012; // 4 entries (x * 12)
-        public const int EnPassentFileIndex = 008; // 8 entries (x * 12)
+        // [0-7][0] enpassent files
+        // [0][6] is white to move
+        // [1-4][6] castling rights (KQkq)
 
-        public ulong HashValue = 0;
+        private static Random rand = new Random(696131231); //Number from random.org
 
-        public ZobristHashing()
+        public ulong HashValue;
+
+        static ZobristHashing()
         {
-            Random rand = new Random(696131231); //Number from random.org
-            for (int i = 0; i < TABLE.Length; i++)
+            var zobristTable = new ulong[64][];
+
+            for (int squareIndex = 0; squareIndex < 64; squareIndex++)
             {
-                TABLE[i] = NextUInt64(rand);
+                zobristTable[squareIndex] = new ulong[12];
+                for (int pieceIndex = 0; pieceIndex < 12; pieceIndex++)
+                {
+                    zobristTable[squareIndex][pieceIndex] = NextUInt64();
+                }
             }
+            TABLE = zobristTable;
         }
 
         public void InitializeHash(Board board)
@@ -38,31 +48,60 @@ namespace KnightOwlBot
             }
             if (board.IsWhiteToMove)
             {
-                HashValue ^= TABLE[IsWhiteIndex];
+                UpdateHashSideToMove();
             }
-            for (int i = 0; i < board.CastlingRights.Length; i++)
-            {
-                if (board.CastlingRights[i])
-                {
-                    HashValue ^= TABLE[CastlingIndex + i * 12];
-                }
-            }
-            if (board.EnPassentIndex != 100)
-            {
-                int file = board.EnPassentIndex % 8;
-                HashValue ^= TABLE[EnPassentFileIndex + file * 12];
-            }
+            UpdateHashCastling(board.CastlingRights);
+            UpdateHashEnPassent(board.EnPassentIndex);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UpdateHash(int pieceNotation, int squareIndex)
         {
-            HashValue ^= TABLE[pieceNotation + squareIndex * 12];
+            HashValue ^= TABLE[squareIndex][pieceNotation];
         }
 
-        public static UInt64 NextUInt64(Random rng)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void UpdateHashMove(int fromPieceNotation, int fromIndex, int toPieceNotation, int toIndex, int curEnpassant, int lastEnpassant)
+        {
+            UpdateHash(fromPieceNotation, fromIndex);
+            UpdateHash(toPieceNotation, toIndex);
+            UpdateHashEnPassent(curEnpassant);
+            UpdateHashEnPassent(lastEnpassant);
+            UpdateHashSideToMove();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateHashSideToMove()
+        {
+            HashValue ^= TABLE[0][6];
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void UpdateHashCastling(bool[] castlingRights)
+        {
+            for (int i = 0; i < 4; i++)
+            {
+                if (castlingRights[i])
+                {
+                    HashValue ^= TABLE[i + 1][6];
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateHashEnPassent(int enPassentIndex)
+        {
+            if (enPassentIndex < 64)
+            {
+                int file = enPassentIndex % 8;
+                HashValue ^= TABLE[file][0];
+            }
+        }
+
+        private static UInt64 NextUInt64()
         {
             byte[] buffer = new byte[8];
-            rng.NextBytes(buffer);
+            rand.NextBytes(buffer);
             return BitConverter.ToUInt64(buffer, 0);
         }
     }

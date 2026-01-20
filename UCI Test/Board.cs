@@ -28,6 +28,7 @@ namespace KnightOwlBot
             board = new Piece[64];
             BitboardPinned = [];
             CastlingRights = [false, false, false, false]; //KQkq
+            EnPassentIndex = 100;
             int y = 0;
 
             for (int i = 0; i < 64; i++)
@@ -578,13 +579,7 @@ namespace KnightOwlBot
             }
             IsWhiteToMove = !IsWhiteToMove;
 
-            zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.EnPassentFileIndex] + (ulong)(move.PrevEnPassentIndex % 8) * 12;
-            zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.EnPassentFileIndex] + (ulong)(EnPassentIndex % 8) * 12;
-
-            zobrist.UpdateHash(board[index2].Notation, index2);
-            zobrist.UpdateHash(pieceNotation, index1);
-
-            zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.IsWhiteIndex];
+            zobrist.UpdateHashMove(pieceNotation, index1, board[index2].Notation, index2, EnPassentIndex, move.PrevEnPassentIndex);
         }
 
         public void UndoMove(Move move)
@@ -647,24 +642,12 @@ namespace KnightOwlBot
             EnPassentIndex = move.PrevEnPassentIndex;
             IsWhiteToMove = !IsWhiteToMove;
 
-            zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.EnPassentFileIndex] + (ulong) (move.EnPassentIndex % 8) * 12;
-            zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.EnPassentFileIndex] + (ulong) (EnPassentIndex % 8) * 12;
-
-            zobrist.UpdateHash(board[index2].Notation, index2);
-            zobrist.UpdateHash(pieceNotation, index1);
-
-            zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.IsWhiteIndex];
+            zobrist.UpdateHashMove(pieceNotation, index1, board[index2].Notation, index2, EnPassentIndex, move.EnPassentIndex);
         }
 
         public void CalculateCastlingRights()
         {
-            for (int i = 0; i < 4; i++)
-            {
-                if (CastlingRights[i])
-                {
-                    zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.CastlingIndex + i * 12];
-                }
-            }
+            zobrist.UpdateHashCastling(CastlingRights);
 
             CastlingRights = [true, true, true, true];
 
@@ -691,13 +674,7 @@ namespace KnightOwlBot
                 CastlingRights[3] = false;
             }
 
-            for (int i = 0; i < 4; i++)
-            {
-                if (CastlingRights[i])
-                {
-                    zobrist.HashValue ^= ZobristHashing.TABLE[ZobristHashing.CastlingIndex + i * 12];
-                }
-            }
+            zobrist.UpdateHashCastling(CastlingRights);
         }
 
         public override string ToString()
