@@ -2,33 +2,33 @@
 {
     internal class Move
     {
-        public int Index1;
-        public int Index2;
-        public bool IsCapture;
-        public char PromPiece;
-        public Piece LastCapture;
-        public int EnPassentIndex;
-        public int PrevEnPassentIndex = 100;
-        public int MoveValue = 0;
-        public bool IsFirstMove = false;
-        public bool IsCastleMove = false;
+        public int index1;
+        public int index2;
+        public bool isCapture;
+        public char promPiece;
+        public Piece lastCapture;
+        public int enPassentIndex;
+        public int prevEnPassentIndex = 100;
+        public int moveValue = 0;
+        public bool isFirstMove = false;
+        public bool isCastleMove = false;
 
         public Move(int index1, int index2, bool isCapture = false, Piece lastCapture = null, int enPassentIndex = 100, char promPiece = '\0')
         {
-            this.Index1 = index1;
-            this.Index2 = index2;
-            this.IsCapture = isCapture;
-            this.PromPiece = promPiece;
-            this.LastCapture = lastCapture;
-            this.EnPassentIndex = enPassentIndex;
+            this.index1 = index1;
+            this.index2 = index2;
+            this.isCapture = isCapture;
+            this.promPiece = promPiece;
+            this.lastCapture = lastCapture;
+            this.enPassentIndex = enPassentIndex;
         }
 
         public string GetNotation()
         {
-            string moveNotation = LookupTables.indexToPos[Index1] + LookupTables.indexToPos[Index2];
-            if (PromPiece != '\0')
+            string moveNotation = LookupTables.indexToPos[index1] + LookupTables.indexToPos[index2];
+            if (promPiece != '\0')
             {
-                moveNotation += char.ToLower(PromPiece);
+                moveNotation += char.ToLower(promPiece);
             }
             return moveNotation;
         }

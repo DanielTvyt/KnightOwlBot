@@ -1,8 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-
 
 namespace KnightOwlBot
 {
@@ -28,7 +27,7 @@ namespace KnightOwlBot
                 }
                 else if (UciIn.Contains("go"))
                 {
-                    if (board.IsWhiteToMove)
+                    if (board.isWhiteToMove)
                     {
                         if (UciIn.Contains("wtime"))
                         {
@@ -191,21 +190,21 @@ namespace KnightOwlBot
 
                     if (moves[i].Length == 5)
                     {
-                        move.PromPiece = moves[i][4];
-                        if (board.IsWhiteToMove)
+                        move.promPiece = moves[i][4];
+                        if (board.isWhiteToMove)
                         {
-                            move.PromPiece = char.ToUpper(move.PromPiece);
+                            move.promPiece = char.ToUpper(move.promPiece);
                         }
                     }
-                    if (board.board[move.Index1].Notation is Piece.P or Piece.p && (move.Index1 - move.Index2) % 8 != 0 && board.board[move.Index2] == null)
+                    if (board.board[move.index1].notation is Piece.P or Piece.p && (move.index1 - move.index2) % 8 != 0 && board.board[move.index2] == null)
                     {
-                        move.IsCapture = true; //en passent capture
-                        move.LastCapture = null;
+                        move.isCapture = true; //en passent capture
+                        move.lastCapture = null;
                     }
-                    if (board.board[move.Index2] != null)
+                    if (board.board[move.index2] != null)
                     {
-                        move.IsCapture = true;
-                        move.LastCapture = board.board[move.Index2];
+                        move.isCapture = true;
+                        move.lastCapture = board.board[move.index2];
                     }
 
                     board.DoMove(move);

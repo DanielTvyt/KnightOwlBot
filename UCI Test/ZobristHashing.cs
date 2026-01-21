@@ -1,24 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KnightOwlBot
 {
     internal class ZobristHashing
     {
-        public static readonly ulong[][] TABLE; // 64 squares * 12 pieces
+        private static readonly ulong[][] TABLE; // 64 squares * 12 pieces
         //pawns cant be on first or last rank so we save 16 entries
         // [0-7][0] enpassent files
         // [0][6] is white to move
         // [1-4][6] castling rights (KQkq)
 
-        private static Random rand = new Random(696131231); //Number from random.org
+        private static readonly Random rand = new(696131231); //Number from random.org
 
-        public ulong HashValue;
+        public ulong hashValue;
 
         static ZobristHashing()
         {
@@ -37,27 +32,27 @@ namespace KnightOwlBot
 
         public void InitializeHash(Board board)
         {
-            HashValue = 0;
+            hashValue = 0;
             for (int i = 0; i < 64; i++)
             {
                 Piece piece = board.board[i];
                 if (piece != null)
                 {
-                    UpdateHash(piece.Notation, i);
+                    UpdateHash(piece.notation, i);
                 }
             }
-            if (board.IsWhiteToMove)
+            if (board.isWhiteToMove)
             {
                 UpdateHashSideToMove();
             }
-            UpdateHashCastling(board.CastlingRights);
-            UpdateHashEnPassent(board.EnPassentIndex);
+            UpdateHashCastling(board.castlingRights);
+            UpdateHashEnPassent(board.enPassentIndex);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UpdateHash(int pieceNotation, int squareIndex)
         {
-            HashValue ^= TABLE[squareIndex][pieceNotation];
+            hashValue ^= TABLE[squareIndex][pieceNotation];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -73,7 +68,7 @@ namespace KnightOwlBot
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdateHashSideToMove()
         {
-            HashValue ^= TABLE[0][6];
+            hashValue ^= TABLE[0][6];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -83,7 +78,7 @@ namespace KnightOwlBot
             {
                 if (castlingRights[i])
                 {
-                    HashValue ^= TABLE[i + 1][6];
+                    hashValue ^= TABLE[i + 1][6];
                 }
             }
         }
@@ -94,7 +89,7 @@ namespace KnightOwlBot
             if (enPassentIndex < 64)
             {
                 int file = enPassentIndex % 8;
-                HashValue ^= TABLE[file][0];
+                hashValue ^= TABLE[file][0];
             }
         }
 

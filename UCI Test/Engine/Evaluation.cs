@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace KnightOwlBot.Engine
+﻿namespace KnightOwlBot.Engine
 {
     internal class Evaluation
     {
@@ -22,9 +16,9 @@ namespace KnightOwlBot.Engine
                 Piece piece = board.board[i];
                 if (piece == null) continue;
 
-                score += piece.Material;
+                score += piece.material;
 
-                switch (piece.Notation)
+                switch (piece.notation)
                 {
                     case Piece.P:
                         pstScore += (PST.pawn[i] * openingRatio) + (PST.egPawn[i] * endgameRatio);
@@ -66,7 +60,7 @@ namespace KnightOwlBot.Engine
                 }
             }
             score += pstScore / 100;
-            return board.IsWhiteToMove ? score : -score;
+            return board.isWhiteToMove ? score : -score;
         }
     }
 }

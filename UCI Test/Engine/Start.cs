@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KnightOwlBot.Engine
 {
@@ -64,14 +61,14 @@ namespace KnightOwlBot.Engine
                     (score, pv) = Search.MiniMax(board, depth - 1, ply + 1, -beta, -alpha);
                     score *= -1;
 
-                    move.MoveValue = score;
+                    move.moveValue = score;
 
                     if (score > alpha)
                     {
                         bestMove = move;
                         bestPv = pv;
                         alpha = score;
-                        move.MoveValue = 1000 + Math.Abs(alpha * 1000); //Search best move first next iteration
+                        move.moveValue = 1000 + Math.Abs(alpha * 1000); //Search best move first next iteration
                     }
                     board.UndoMove(move);
 

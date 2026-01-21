@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KnightOwlBot.Engine
 {
@@ -21,7 +18,7 @@ namespace KnightOwlBot.Engine
 
             if (moves.Length == 0)
             {
-                if (board.IsInCheck)
+                if (board.isInCheck)
                 {
                     return (Convert.ToInt32(-Start.INF + ply), pv);
                 }
@@ -37,7 +34,7 @@ namespace KnightOwlBot.Engine
             {
                 board.DoMove(move);
 
-                if (move.IsCapture && depth == 1) //quiescence search
+                if (move.isCapture && depth == 1) //quiescence search
                 {
                     (score, pv) = QuiescenceSearch(board, ply + 1, -beta, -alpha);
                     score *= -1;
@@ -82,14 +79,14 @@ namespace KnightOwlBot.Engine
 
             if (moves.Length == 0)
             {
-                if (board.IsInCheck)
+                if (board.isInCheck)
                 {
                     return (Convert.ToInt32(-Start.INF + ply), pv);
                 }
                 return (0, pv);
             }
 
-            moves = Array.FindAll(moves, m => m.IsCapture);
+            moves = Array.FindAll(moves, m => m.isCapture);
             moves = SortMoves(moves, board, true);
             int score;
             Move bestMove = null;
@@ -120,44 +117,44 @@ namespace KnightOwlBot.Engine
             {
                 foreach (Move move in moves)
                 {
-                    if (move.IsCapture)
+                    if (move.isCapture)
                     {
-                        Piece capturedPiece = board.board[move.Index2];
+                        Piece capturedPiece = board.board[move.index2];
                         if (capturedPiece != null)
                         {
-                            move.MoveValue = Math.Abs(capturedPiece.Material * 10) - Math.Abs(board.board[move.Index1].Material);
+                            move.moveValue = Math.Abs(capturedPiece.material * 10) - Math.Abs(board.board[move.index1].material);
                         }
                         else
                         {
-                            move.MoveValue = 900; //en passent capture value
+                            move.moveValue = 900; //en passent capture value
                         }
                     }
-                    else if (move.PromPiece != '\0')
+                    else if (move.promPiece != '\0')
                     {
-                        switch (move.PromPiece)
+                        switch (move.promPiece)
                         {
                             case 'Q' or 'q':
-                                move.MoveValue = 8000;
+                                move.moveValue = 8000;
                                 break;
                             case 'R' or 'r':
-                                move.MoveValue = 4000;
+                                move.moveValue = 4000;
                                 break;
                             case 'B' or 'b':
-                                move.MoveValue = 3000;
+                                move.moveValue = 3000;
                                 break;
                             case 'N' or 'n':
-                                move.MoveValue = 2000;
+                                move.moveValue = 2000;
                                 break;
                         }
                     }
                     else
                     {
-                        move.MoveValue = 0;
+                        move.moveValue = 0;
                     }
                 }
             }
 
-            Array.Sort(moves, delegate (Move x, Move y) { return y.MoveValue.CompareTo(x.MoveValue); });
+            Array.Sort(moves, delegate (Move x, Move y) { return y.moveValue.CompareTo(x.moveValue); });
             return moves;
         }
     }

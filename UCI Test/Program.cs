@@ -10,6 +10,7 @@ namespace KnightOwlBot
             //Warm up
             Board board = new("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
             Board.GetLegalMoves(board);
+            Engine.Search.MiniMax(board, 2, 0, -Engine.Start.INF, Engine.Start.INF);
             board = null;
 
             if (args.Length > 0 && args[0] == "speedtest")
