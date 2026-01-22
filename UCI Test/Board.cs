@@ -6,9 +6,6 @@ namespace KnightOwlBot
 {
     internal class Board
     {
-        private const int MAXLEGALMOVES = 213;
-        private readonly Move[] moves = new Move[MAXLEGALMOVES];
-
         public Piece[] board;
         public bool isWhiteToMove;
         public int enPassentIndex;
@@ -21,7 +18,11 @@ namespace KnightOwlBot
         public bool[] castlingRights;
         public int pieceCount;
 
-        public ZobristHashing zobrist = new();
+        public readonly ZobristHashing zobrist = new();
+
+        private const int MAXLEGALMOVES = 213;
+        private readonly Move[] moves = new Move[MAXLEGALMOVES];
+        private readonly List<ulong> repetitionHistory;
 
         public Board(string fenString)
         {
@@ -29,6 +30,7 @@ namespace KnightOwlBot
             bitboardPinned = [];
             castlingRights = [false, false, false, false]; //KQkq
             enPassentIndex = 100;
+            repetitionHistory = [];
             int y = 0;
 
             for (int i = 0; i < 64; i++)
@@ -78,6 +80,7 @@ namespace KnightOwlBot
                 enPassentIndex = fenString[y + 2] - 96 + 64 - 8 * Convert.ToInt32(new string(fenString[y + 3], 1)) - 1;
             }
             zobrist.InitializeHash(this);
+            repetitionHistory.Add(zobrist.hashValue);
         }
 
         private UInt64 GetBiboard()
@@ -580,6 +583,8 @@ namespace KnightOwlBot
             isWhiteToMove = !isWhiteToMove;
 
             zobrist.UpdateHashMove(pieceNotation, index1, board[index2].notation, index2, enPassentIndex, move.prevEnPassentIndex);
+
+            repetitionHistory.Add(zobrist.hashValue);
         }
 
         public void UndoMove(Move move)
@@ -643,6 +648,8 @@ namespace KnightOwlBot
             isWhiteToMove = !isWhiteToMove;
 
             zobrist.UpdateHashMove(pieceNotation, index1, board[index2].notation, index2, enPassentIndex, move.enPassentIndex);
+
+            repetitionHistory.RemoveAt(repetitionHistory.Count - 1);
         }
 
         public void CalculateCastlingRights()
@@ -675,6 +682,21 @@ namespace KnightOwlBot
             }
 
             zobrist.UpdateHashCastling(castlingRights);
+        }
+
+        public bool IsThreefoldRepetition()
+        {
+            ulong current = repetitionHistory[repetitionHistory.Count - 1];
+
+            // TODO Check for irreversible moves
+            for (int i = repetitionHistory.Count - 2; i >= 0; i--)
+            {
+                if (repetitionHistory[i] == current)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public override string ToString()

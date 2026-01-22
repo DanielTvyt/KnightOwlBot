@@ -206,7 +206,7 @@ namespace KnightOwlBot
                         move.isCapture = true;
                         move.lastCapture = board.board[move.index2];
                     }
-
+                    board.CalculateCastlingRights();
                     board.DoMove(move);
                 }
             }

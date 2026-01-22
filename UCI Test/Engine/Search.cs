@@ -9,6 +9,11 @@ namespace KnightOwlBot.Engine
         {
             List<Move> pv = [];
 
+            if (board.IsThreefoldRepetition())
+            {
+                return (0, pv);
+            }
+
             if (depth == 0)
             {
                 return (Evaluation.Eval(board), pv);
@@ -65,6 +70,12 @@ namespace KnightOwlBot.Engine
         private static (int, List<Move>) QuiescenceSearch(Board board, uint ply, int alpha, int beta)
         {
             List<Move> pv = [];
+
+            if (board.IsThreefoldRepetition())
+            {
+                return (0, pv);
+            }
+
             int standPat = Evaluation.Eval(board);
 
             if (standPat >= beta)
