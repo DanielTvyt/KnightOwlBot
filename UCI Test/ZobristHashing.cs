@@ -45,7 +45,7 @@ namespace KnightOwlBot
             {
                 UpdateHashSideToMove();
             }
-            UpdateHashCastling(board.castlingRights);
+            UpdateHashCastling(board.castlingRights, [false, false, false, false]);
             UpdateHashEnPassent(board.enPassentIndex);
         }
 
@@ -72,11 +72,11 @@ namespace KnightOwlBot
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void UpdateHashCastling(bool[] castlingRights)
+        public void UpdateHashCastling(bool[] curCastlingRights, bool[] castlingRights)
         {
             for (int i = 0; i < 4; i++)
             {
-                if (castlingRights[i])
+                if (curCastlingRights[i] != castlingRights[i])
                 {
                     hashValue ^= TABLE[i + 1][6];
                 }

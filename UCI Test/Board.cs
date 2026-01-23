@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace KnightOwlBot
@@ -262,7 +263,6 @@ namespace KnightOwlBot
 
             int castleK = isWhiteToMove ? 0 : 2;
             int castleQ = isWhiteToMove ? 1 : 3;
-            CalculateCastlingRights();
 
             int fw = isWhiteToMove ? -8 : 8;
             int cap1 = isWhiteToMove ? -9 : 7;
@@ -573,12 +573,16 @@ namespace KnightOwlBot
                 else
                 {
                     zobrist.UpdateHash(move.lastCapture.notation, move.index2);
+                    if (move.lastCapture.notation is Piece.R or Piece.r)
+                        CalculateCastlingRights();
                 }
             }
             if (!board[index2].hasMoved)
             {
                 move.isFirstMove = true;
                 board[index2].hasMoved = true;
+                if (board[index2].notation is Piece.K or Piece.k or Piece.R or Piece.r)
+                    CalculateCastlingRights();
             }
             isWhiteToMove = !isWhiteToMove;
 
@@ -604,6 +608,8 @@ namespace KnightOwlBot
                 {
                     board[index1] = move.lastCapture;
                     zobrist.UpdateHash(board[index1].notation, index1);
+                    if (board[index1].notation is Piece.R or Piece.r)
+                        CalculateCastlingRights();
                 }
                 else
                 {
@@ -621,6 +627,8 @@ namespace KnightOwlBot
             if (move.isFirstMove)
             {
                 board[index2].hasMoved = false;
+                if (board[index2].notation is Piece.K or Piece.k or Piece.R or Piece.r)
+                    CalculateCastlingRights();
             }
 
             if (move.isCastleMove)
@@ -654,34 +662,33 @@ namespace KnightOwlBot
 
         public void CalculateCastlingRights()
         {
-            zobrist.UpdateHashCastling(castlingRights);
-
-            castlingRights = [true, true, true, true];
+            bool[] curCastlingRights = [true, true, true, true];
 
             if (board[60] != null && board[60].notation == Piece.K && !board[60].hasMoved)
             {
-                castlingRights[0] = board[63] != null && board[63].notation == Piece.R && !board[63].hasMoved; //white king side
+                curCastlingRights[0] = board[63] != null && board[63].notation == Piece.R && !board[63].hasMoved; //white king side
 
-                castlingRights[1] = board[56] != null && board[56].notation == Piece.R && !board[56].hasMoved; //white queen side
+                curCastlingRights[1] = board[56] != null && board[56].notation == Piece.R && !board[56].hasMoved; //white queen side
             }
             else
             {
-                castlingRights[0] = false;
-                castlingRights[1] = false;
+                curCastlingRights[0] = false;
+                curCastlingRights[1] = false;
             }
             if (board[4] != null && board[4].notation == Piece.k && !board[4].hasMoved)
             {
-                castlingRights[2] = board[7] != null && board[7].notation == Piece.r && !board[7].hasMoved; //black king side
+                curCastlingRights[2] = board[7] != null && board[7].notation == Piece.r && !board[7].hasMoved; //black king side
 
-                castlingRights[3] = board[0] != null && board[0].notation == Piece.r && !board[0].hasMoved; //black queen side
+                curCastlingRights[3] = board[0] != null && board[0].notation == Piece.r && !board[0].hasMoved; //black queen side
             }
             else
             {
-                castlingRights[2] = false;
-                castlingRights[3] = false;
+                curCastlingRights[2] = false;
+                curCastlingRights[3] = false;
             }
 
-            zobrist.UpdateHashCastling(castlingRights);
+            zobrist.UpdateHashCastling(curCastlingRights, castlingRights);
+            castlingRights = curCastlingRights;
         }
 
         public bool IsThreefoldRepetition()
