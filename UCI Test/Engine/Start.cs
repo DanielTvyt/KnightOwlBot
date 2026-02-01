@@ -38,7 +38,7 @@ namespace KnightOwlBot.Engine
             maxTime = (time + inc) / 10;
             watch.Start();
             nodes = 0;
-            int score = 0;
+            int score;
             List<Move> pv;
             List<Move> bestPv = [];
             Move bestMove = null;
@@ -57,7 +57,7 @@ namespace KnightOwlBot.Engine
                 foreach (Move move in moves)
                 {
                     board.DoMove(move);
-
+                    
                     (score, pv) = Search.MiniMax(board, depth - 1, ply + 1, -beta, -alpha);
                     score *= -1;
 
@@ -68,7 +68,8 @@ namespace KnightOwlBot.Engine
                         bestMove = move;
                         bestPv = pv;
                         alpha = score;
-                        move.moveValue = 1000 + Math.Abs(alpha * 1000); //Search best move first next iteration
+                        if (Math.Abs(alpha) < INF - 1000) //Only affect non checkmate moves
+                            move.moveValue = alpha + 1000; //Search best move first next iteration
                     }
                     board.UndoMove(move);
 
@@ -94,15 +95,17 @@ namespace KnightOwlBot.Engine
 
                 if (Math.Abs(alpha) > INF - 1000) //checkmate
                 {
-                    string perspective = score > 0 ? "" : "-";
-                    bestScore = "mate " + perspective + (INF - Math.Abs(alpha)) / 2;
+                    string perspective = alpha > 0 ? "" : "-";
+                    bestScore = "mate " + perspective + (INF - Math.Abs(alpha));
                 }
                 else
                 {
                     bestScore = "cp " + alpha.ToString();
                 }
 
-                Console.WriteLine("info depth " + depth + " seldepth " + selDepth + " score " + bestScore + " nodes " + nodes + " nps " + Convert.ToUInt32(nodes / (decimal)takenTime * 1000) + " time " + takenTime + " pv " + pvString);
+                uint nodesPerSecond = Convert.ToUInt32(nodes / (decimal)takenTime * 1000);
+
+                Console.WriteLine($"info depth {depth} seldepth {selDepth} score {bestScore} nodes {nodes} nps {nodesPerSecond} time {takenTime} pv {pvString}");
             }
             watch = new Stopwatch();
             return bestPv[0].GetNotation();
