@@ -95,6 +95,7 @@ namespace KnightOwlBot
                 else if (UciIn == "uci")
                 {
                     Console.WriteLine("id name UciTest");
+                    Console.WriteLine("id author Daniel Voss");
                     Console.WriteLine("uciok");
                 }
                 else if (UciIn.Contains("isready"))
