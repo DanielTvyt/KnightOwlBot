@@ -32,10 +32,10 @@ namespace KnightOwlBot.Engine
         {
             if (time == 0)
             {
-                time = 500 * 100; //if no time is given search for 500ms
+                time = 500 * 50; //if no time is given search for 500ms
             }
-            uint searchTime = (time + inc) / 100;
-            maxTime = (time + inc) / 10;
+            uint searchTime = (time + inc) / 50;
+            maxTime = Math.Min(time / 2, (time + inc) / 5);
             watch.Start();
             nodes = 0;
             int score;

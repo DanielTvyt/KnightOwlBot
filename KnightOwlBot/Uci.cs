@@ -53,7 +53,7 @@ namespace KnightOwlBot
                                 }
                                 sInc += UciIn[i];
                             }
-                            inc = Convert.ToUInt32(sTime);
+                            inc = Convert.ToUInt32(sInc);
                         }
                     }
                     else
@@ -82,7 +82,7 @@ namespace KnightOwlBot
                                 }
                                 sInc += UciIn[i];
                             }
-                            inc = Convert.ToUInt32(sTime);
+                            inc = Convert.ToUInt32(sInc);
                         }
                     }
                     if (UciIn.Contains("infinite"))
