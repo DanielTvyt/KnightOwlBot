@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace KnightOwlBot.Engine
+﻿namespace KnightOwlBot.Engine
 {
     internal class Search
     {

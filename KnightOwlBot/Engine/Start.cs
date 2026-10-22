@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace KnightOwlBot.Engine
 {
@@ -57,7 +55,7 @@ namespace KnightOwlBot.Engine
                 foreach (Move move in moves)
                 {
                     board.DoMove(move);
-                    
+
                     (score, pv) = Search.MiniMax(board, depth - 1, ply + 1, -beta, -alpha);
                     score *= -1;
 
