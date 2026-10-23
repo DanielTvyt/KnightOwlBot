@@ -135,10 +135,10 @@ namespace KnightOwlBot
                     continue;
                 }
 
-                for (int k = 0; k < board[i].moveDelta.Length; k++)
+                for (int k = 0; k < Piece.moveDelta[board[i].notation].Length; k++)
                 {
                     int lastJ = i;
-                    int moveDelta = board[i].moveDelta[k];
+                    int moveDelta = Piece.moveDelta[board[i].notation][k];
                     for (int j = i + moveDelta; j < 64 && j >= 0; j += moveDelta)
                     {
                         if (j % 8 == 0 && lastJ % 8 == 7 || j % 8 == 7 && lastJ % 8 == 0 || i % 8 < 2 && moveDelta is -10 or 6 || i % 8 > 5 && moveDelta is 10 or -6) //detect board edge
@@ -347,10 +347,10 @@ namespace KnightOwlBot
                     }
                 }
 
-                for (int k = 0; k < board[i].moveDelta.Length; k++)
+                for (int k = 0; k < Piece.moveDelta[board[i].notation].Length; k++)
                 {
                     int lastJ = i;
-                    int moveDelta = board[i].moveDelta[k];
+                    int moveDelta = Piece.moveDelta[board[i].notation][k];
                     for (int j = i + moveDelta; j < 64 && j >= 0; j += moveDelta)
                     {
                         if (j % 8 == 0 && lastJ % 8 == 7 || j % 8 == 7 && lastJ % 8 == 0 || i % 8 < 2 && moveDelta is -10 or 6 || i % 8 > 5 && moveDelta is 10 or -6) //detect board edge

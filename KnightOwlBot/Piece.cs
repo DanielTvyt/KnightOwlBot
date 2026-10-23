@@ -2,7 +2,7 @@
 {
     internal class Piece
     {
-        public int[] moveDelta;
+        //public int[] moveDelta;
         public bool isWhite;
         public bool isSliding;
         public int material;
@@ -27,6 +27,22 @@
         private static readonly int[] queen = [-9, -8, -7, -1, 1, 7, 8, 9];
         private static readonly int[] knight = [-17, -15, -10, -6, 6, 10, 15, 17];
 
+        public static readonly int[][] moveDelta =
+        [
+            new int[] { 0 }, // Pawn
+            knight,
+            bishop,
+            rook,
+            queen,
+            queen,
+            new int[] { 0 }, // Pawn
+            knight,
+            bishop,
+            rook,
+            queen,
+            queen
+        ];
+
         public Piece(char pieceIn)
         {
             switch (pieceIn)
@@ -41,35 +57,30 @@
                     isWhite = true;
                     material = 300;
                     isSliding = false;
-                    moveDelta = knight;
                     notation = N;
                     return;
                 case 'B':
                     isWhite = true;
                     material = 350;
                     isSliding = true;
-                    moveDelta = bishop;
                     notation = B;
                     return;
                 case 'R':
                     isWhite = true;
                     material = 500;
                     isSliding = true;
-                    moveDelta = rook;
                     notation = R;
                     return;
                 case 'Q':
                     isWhite = true;
                     material = 900;
                     isSliding = true;
-                    moveDelta = queen;
                     notation = Q;
                     return;
                 case 'K':
                     isWhite = true;
                     material = 0;
                     isSliding = false;
-                    moveDelta = queen;
                     notation = K;
                     return;
 
@@ -83,35 +94,30 @@
                     isWhite = false;
                     material = -300;
                     isSliding = false;
-                    moveDelta = knight;
                     notation = n;
                     return;
                 case 'b':
                     isWhite = false;
                     material = -350;
                     isSliding = true;
-                    moveDelta = bishop;
                     notation = b;
                     return;
                 case 'r':
                     isWhite = false;
                     material = -500;
                     isSliding = true;
-                    moveDelta = rook;
                     notation = r;
                     return;
                 case 'q':
                     isWhite = false;
                     material = -900;
                     isSliding = true;
-                    moveDelta = queen;
                     notation = q;
                     return;
                 case 'k':
                     isWhite = false;
                     material = 0;
                     isSliding = false;
-                    moveDelta = queen;
                     notation = k;
                     return;
             }
